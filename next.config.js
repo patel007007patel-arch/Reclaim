@@ -8,31 +8,49 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer }) => {
-    // Find the rule that handles images/assets
-    const fileLoaderRule = config.module.rules.find((rule) => {
-      if (rule.test && rule.test instanceof RegExp) {
-        return rule.test.test('.svg');
-      }
-      return false;
-    });
+    // Find and modify the oneOf rule (Next.js default structure)
+    const oneOfRule = config.module.rules.find((rule) => rule.oneOf);
+    
+    if (oneOfRule && oneOfRule.oneOf) {
+      // Exclude SVG from all file-loader rules in oneOf
+      oneOfRule.oneOf.forEach((rule) => {
+        if (rule.test && rule.test instanceof RegExp && rule.test.test('.svg')) {
+          rule.exclude = /\.svg$/i;
+        }
+      });
 
-    if (fileLoaderRule) {
-      fileLoaderRule.exclude = /\.svg$/i;
+      // Insert SVG rule at the beginning of oneOf array
+      oneOfRule.oneOf.unshift({
+        test: /\.svg$/i,
+        issuer: /\.[jt]sx?$/,
+        use: [{
+          loader: "@svgr/webpack",
+          options: {
+            typescript: true,
+            ext: "tsx",
+          },
+        }],
+      });
+    } else {
+      // Fallback: handle rules array directly
+      config.module.rules.forEach((rule) => {
+        if (rule.test && rule.test instanceof RegExp && rule.test.test('.svg')) {
+          rule.exclude = /\.svg$/i;
+        }
+      });
+
+      config.module.rules.unshift({
+        test: /\.svg$/i,
+        issuer: /\.[jt]sx?$/,
+        use: [{
+          loader: "@svgr/webpack",
+          options: {
+            typescript: true,
+            ext: "tsx",
+          },
+        }],
+      });
     }
-
-    // SVG handling - convert SVGs to React components using SVGR
-    // This must come after excluding SVG from file-loader
-    config.module.rules.push({
-      test: /\.svg$/i,
-      issuer: /\.[jt]sx?$/,
-      use: [{
-        loader: "@svgr/webpack",
-        options: {
-          typescript: true,
-          ext: "tsx",
-        },
-      }],
-    });
     
     // Optimize bundle size
     if (!isServer) {

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Switch = require("react-switch").default as React.ComponentType<any>;
+import Switch from "react-switch";
 
 interface StatusToggleProps {
   active: boolean;
