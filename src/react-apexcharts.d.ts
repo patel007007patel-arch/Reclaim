@@ -1,8 +1,8 @@
 declare module "react-apexcharts" {
-  import { Component } from "react";
+  import { ComponentType } from "react";
   import { ApexOptions } from "apexcharts";
 
-  interface Props {
+  interface ReactApexChartProps {
     options: ApexOptions;
     series: any;
     type: string;
@@ -10,6 +10,7 @@ declare module "react-apexcharts" {
     width?: number | string;
   }
 
-  export default class ReactApexChart extends Component<Props> {}
+  const ReactApexChart: ComponentType<ReactApexChartProps>;
+  export default ReactApexChart;
 }
 

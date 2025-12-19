@@ -15,7 +15,11 @@ import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 
 const ReactApexChart = dynamic(
-  () => import("react-apexcharts"),
+  () => import("react-apexcharts").then((mod) => mod.default || mod).catch(() => {
+    // Return a placeholder component if import fails
+    const Placeholder = () => null;
+    return { default: Placeholder };
+  }),
   {
     ssr: false,
   }
@@ -505,7 +509,7 @@ export default function Dashboard() {
           <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
             Monthly User Signups
           </h3>
-          {chartData && (
+          {chartData && ReactApexChart && typeof ReactApexChart !== 'undefined' && (
             <div className="max-w-full overflow-x-auto custom-scrollbar">
               <div className="min-w-[600px]">
                 <ReactApexChart
@@ -525,7 +529,7 @@ export default function Dashboard() {
           <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
             Posts Overview (Monthly)
           </h3>
-          {chartData && ReactApexChart && (
+          {chartData && ReactApexChart && typeof ReactApexChart !== 'undefined' && (
             <div className="max-w-full overflow-x-auto custom-scrollbar">
               <div className="min-w-[600px]">
                 <ReactApexChart
