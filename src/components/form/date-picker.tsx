@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
-import flatpickr from 'flatpickr';
-import 'flatpickr/dist/flatpickr.css';
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Label from './Label';
 import { CalenderIcon } from '../../icons';
-import Hook = flatpickr.Options.Hook;
-import DateOption = flatpickr.Options.DateOption;
+import 'flatpickr/dist/flatpickr.css';
+
+// Type definitions for flatpickr
+type Hook = (selectedDates: Date[], dateStr: string, instance: any) => void;
+type DateOption = string | Date | number | (string | Date | number)[];
 
 type PropsType = {
   id: string;
@@ -23,19 +26,42 @@ export default function DatePicker({
   defaultDate,
   placeholder,
 }: PropsType) {
+  const flatpickrInstance = useRef<any>(null);
+
   useEffect(() => {
-    const flatPickr = flatpickr(`#${id}`, {
-      mode: mode || "single",
-      static: true,
-      monthSelectorType: "static",
-      dateFormat: "Y-m-d",
-      defaultDate,
-      onChange,
-    });
+    // Dynamically import flatpickr only on client side
+    const initFlatpickr = async () => {
+      if (typeof window === 'undefined') return;
+
+      const flatpickr = (await import('flatpickr')).default;
+
+      // Destroy existing instance if any
+      if (flatpickrInstance.current) {
+        if (!Array.isArray(flatpickrInstance.current)) {
+          flatpickrInstance.current.destroy();
+        }
+        flatpickrInstance.current = null;
+      }
+
+      // Initialize flatpickr
+      flatpickrInstance.current = flatpickr(`#${id}`, {
+        mode: mode || "single",
+        static: true,
+        monthSelectorType: "static",
+        dateFormat: "Y-m-d",
+        defaultDate,
+        onChange,
+      });
+    };
+
+    initFlatpickr();
 
     return () => {
-      if (!Array.isArray(flatPickr)) {
-        flatPickr.destroy();
+      if (flatpickrInstance.current) {
+        if (!Array.isArray(flatpickrInstance.current)) {
+          flatpickrInstance.current.destroy();
+        }
+        flatpickrInstance.current = null;
       }
     };
   }, [mode, onChange, id, defaultDate]);
