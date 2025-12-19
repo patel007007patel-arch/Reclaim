@@ -3,7 +3,7 @@
   "version": "2.2.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev --webpack",
     "dev:webpack": "next dev --webpack",
     "dev:nodemon": "nodemon --watch src --exec \"npm run dev\"",
     "build": "next build",
