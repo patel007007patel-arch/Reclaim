@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
   {
     icon: UserCircleIcon,
     name: "Users Management",
-    path: "/basic-tables"
+    path: "/users"
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {

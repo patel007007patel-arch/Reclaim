@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Toast from "@/components/ui/toast/Toast";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
 import Pagination from "@/components/tables/Pagination";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
 interface Post {
   _id: string;
@@ -32,6 +33,21 @@ export default function CommunityPostsPage() {
     message: "",
     type: "success",
     isVisible: false,
+  });
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    id: string | null;
+    message: string;
+    action?: "delete" | "update";
+    payload?: any;
+  }>({
+    isOpen: false,
+    id: null,
+    message: "",
+    action: undefined,
+    payload: undefined,
   });
   
   // Filters
@@ -74,50 +90,83 @@ export default function CommunityPostsPage() {
     fetchItems();
   }, [page, searchFilter, statusFilter, publishedFilter, flaggedFilter]);
 
-  const updatePost = async (id: string, payload: Partial<Post>) => {
+  const updatePostClick = (id: string, payload: Partial<Post>) => {
     // Determine action for confirmation
     let confirmMessage = "";
-    if (payload.status === "approved") confirmMessage = "Are you sure you want to approve this post?";
-    else if (payload.status === "rejected") confirmMessage = "Are you sure you want to reject this post?";
-    else if (payload.published === true) confirmMessage = "Are you sure you want to publish this post?";
-    else if (payload.published === false) confirmMessage = "Are you sure you want to unpublish this post?";
-    else if (payload.flagged === true) confirmMessage = "Are you sure you want to flag this post?";
-    else if (payload.flagged === false) confirmMessage = "Are you sure you want to unflag this post?";
-    
-    if (confirmMessage && !confirm(confirmMessage)) {
-      return;
+    let title = "Update Post";
+    if (payload.status === "approved") {
+      confirmMessage = "Are you sure you want to approve this post?";
+      title = "Approve Post";
+    } else if (payload.status === "rejected") {
+      confirmMessage = "Are you sure you want to reject this post?";
+      title = "Reject Post";
+    } else if (payload.published === true) {
+      confirmMessage = "Are you sure you want to publish this post?";
+      title = "Publish Post";
+    } else if (payload.published === false) {
+      confirmMessage = "Are you sure you want to unpublish this post?";
+      title = "Unpublish Post";
+    } else if (payload.flagged === true) {
+      confirmMessage = "Are you sure you want to flag this post?";
+      title = "Flag Post";
+    } else if (payload.flagged === false) {
+      confirmMessage = "Are you sure you want to unflag this post?";
+      title = "Unflag Post";
     }
+    
+    if (confirmMessage) {
+      setConfirmDialog({
+        isOpen: true,
+        id,
+        message: confirmMessage,
+        action: "update",
+        payload: payload,
+      });
+    } else {
+      // No confirmation needed, update directly
+      updatePost(id, payload);
+    }
+  };
+
+  const updatePost = async (id?: string, payload?: Partial<Post>) => {
+    const postId = id || confirmDialog.id;
+    const postPayload = payload || confirmDialog.payload;
+    
+    if (!postId || !postPayload) return;
 
     // Optimistic update
     setItems((prevItems) =>
       prevItems.map((item) =>
-        item._id === id ? { ...item, ...payload } : item
+        item._id === postId ? { ...item, ...postPayload } : item
       )
     );
 
     try {
-      const res = await fetch(`/api/admin/posts/${id}`, {
+      const res = await fetch(`/api/admin/posts/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(postPayload),
       });
       const data = await res.json();
       if (data.success) {
         // Refresh to get the latest data from server
         await fetchItems();
         let message = "Post updated successfully";
-        if (payload.status === "approved") message = "Post approved successfully";
-        else if (payload.status === "rejected") message = "Post rejected successfully";
-        else if (payload.published === true) message = "Post published successfully";
-        else if (payload.published === false) message = "Post unpublished successfully";
-        else if (payload.flagged === true) message = "Post flagged successfully";
-        else if (payload.flagged === false) message = "Post unflagged successfully";
+        if (postPayload.status === "approved") message = "Post approved successfully";
+        else if (postPayload.status === "rejected") message = "Post rejected successfully";
+        else if (postPayload.published === true) message = "Post published successfully";
+        else if (postPayload.published === false) message = "Post unpublished successfully";
+        else if (postPayload.flagged === true) message = "Post flagged successfully";
+        else if (postPayload.flagged === false) message = "Post unflagged successfully";
         
         setToast({
           message,
           type: "success",
           isVisible: true,
         });
+        if (confirmDialog.action === "update") {
+          setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, payload: undefined });
+        }
       } else {
         // Revert optimistic update on error
         await fetchItems();
@@ -126,6 +175,9 @@ export default function CommunityPostsPage() {
           type: "error",
           isVisible: true,
         });
+        if (confirmDialog.action === "update") {
+          setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, payload: undefined });
+        }
       }
     } catch (e) {
       console.error("Update failed", e);
@@ -136,13 +188,24 @@ export default function CommunityPostsPage() {
         type: "error",
         isVisible: true,
       });
+      if (confirmDialog.action === "update") {
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, payload: undefined });
+      }
     }
   };
 
-  const deletePost = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this post?")) return;
+  const deletePostClick = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      id,
+      message: "Are you sure you want to delete this post? This action cannot be undone.",
+    });
+  };
+
+  const deletePost = async () => {
+    if (!confirmDialog.id) return;
     try {
-      const res = await fetch(`/api/admin/posts/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/posts/${confirmDialog.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
@@ -151,12 +214,14 @@ export default function CommunityPostsPage() {
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "" });
       } else {
         setToast({
           message: "Failed to delete post",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "" });
       }
     } catch (e) {
       console.error("Delete failed", e);
@@ -165,6 +230,7 @@ export default function CommunityPostsPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "" });
     }
   };
 
@@ -353,7 +419,7 @@ export default function CommunityPostsPage() {
                         activeLabel="Approve"
                         inactiveLabel="Reject"
                         onChange={(isApproved) =>
-                          updatePost(p._id, { status: isApproved ? "approved" : "rejected" })
+                          updatePostClick(p._id, { status: isApproved ? "approved" : "rejected" })
                         }
                       />
                     </div>
@@ -365,7 +431,7 @@ export default function CommunityPostsPage() {
                         activeLabel="Published"
                         inactiveLabel="Draft"
                         onChange={(isPublished) => {
-                          updatePost(p._id, { published: isPublished });
+                          updatePostClick(p._id, { published: isPublished });
                         }}
                       />
                       <div className="text-[11px] text-gray-500 dark:text-gray-400">
@@ -379,13 +445,13 @@ export default function CommunityPostsPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex flex-wrap items-center justify-end gap-2 text-xs">
                       <button
-                        onClick={() => updatePost(p._id, { flagged: !p.flagged })}
+                        onClick={() => updatePostClick(p._id, { flagged: !p.flagged })}
                         className="rounded-lg border border-yellow-200 px-2.5 py-1 text-[11px] font-medium text-yellow-700 hover:bg-yellow-50 dark:border-yellow-800/70 dark:text-yellow-200 dark:hover:bg-yellow-900/40"
                       >
                         {p.flagged ? "Unflag" : "Flag"}
                       </button>
                       <button
-                        onClick={() => deletePost(p._id)}
+                        onClick={() => deletePostClick(p._id)}
                         className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
                       >
                         Delete
@@ -407,6 +473,36 @@ export default function CommunityPostsPage() {
           </div>
         )}
       </div>
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "delete"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, payload: undefined })}
+        onConfirm={deletePost}
+        title="Delete Post"
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "update"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, payload: undefined })}
+        onConfirm={() => updatePost()}
+        title={
+          confirmDialog.payload?.status === "approved" ? "Approve Post" :
+          confirmDialog.payload?.status === "rejected" ? "Reject Post" :
+          confirmDialog.payload?.published === true ? "Publish Post" :
+          confirmDialog.payload?.published === false ? "Unpublish Post" :
+          confirmDialog.payload?.flagged === true ? "Flag Post" :
+          confirmDialog.payload?.flagged === false ? "Unflag Post" :
+          "Update Post"
+        }
+        message={confirmDialog.message}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="warning"
+      />
     </div>
   );
 }

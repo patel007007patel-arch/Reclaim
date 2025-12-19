@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Toast from "@/components/ui/toast/Toast";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
 import Pagination from "@/components/tables/Pagination";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
 interface Quote {
   _id: string;
@@ -33,6 +34,24 @@ export default function QuotesPage() {
     type: "success",
     isVisible: false,
   });
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    id: string | null;
+    message: string;
+    action?: "delete" | "toggle" | "edit";
+    item?: Quote | null;
+    newStatus?: boolean;
+  }>({
+    isOpen: false,
+    id: null,
+    message: "",
+    action: undefined,
+    item: null,
+    newStatus: undefined,
+  });
+  
   const [form, setForm] = useState<Partial<Quote>>({
     text: "",
     author: "",
@@ -126,7 +145,20 @@ export default function QuotesPage() {
     }
   };
 
-  const handleEdit = (q: Quote) => {
+  const handleEditClick = (q: Quote) => {
+    setConfirmDialog({
+      isOpen: true,
+      id: q._id,
+      message: "Are you sure you want to edit this quote?",
+      action: "edit",
+      item: q,
+      newStatus: undefined,
+    });
+  };
+
+  const handleEdit = () => {
+    if (!confirmDialog.item || confirmDialog.action !== "edit") return;
+    const q = confirmDialog.item;
     setEditingId(q._id);
     setShowForm(true);
     setForm({
@@ -135,12 +167,24 @@ export default function QuotesPage() {
       tags: q.tags,
       active: q.active,
     });
+    setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this quote?")) return;
+  const handleDeleteClick = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      id,
+      message: "Are you sure you want to delete this quote? This action cannot be undone.",
+      action: "delete",
+      item: null,
+      newStatus: undefined,
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDialog.id || confirmDialog.action !== "delete") return;
     try {
-      const res = await fetch(`/api/admin/quotes/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/quotes/${confirmDialog.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
@@ -149,12 +193,14 @@ export default function QuotesPage() {
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       } else {
         setToast({
           message: "Failed to delete quote",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       }
     } catch (e) {
       console.error("Delete failed", e);
@@ -163,35 +209,49 @@ export default function QuotesPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
     }
   };
 
-  const toggleActive = async (q: Quote) => {
+  const toggleActiveClick = (q: Quote) => {
     const newActiveStatus = !q.active;
     const action = newActiveStatus ? "activate" : "deactivate";
-    if (!confirm(`Are you sure you want to ${action} this quote?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      id: q._id,
+      message: `Are you sure you want to ${action} this quote?`,
+      action: "toggle",
+      item: q,
+      newStatus: newActiveStatus,
+    });
+  };
+
+  const toggleActive = async () => {
+    if (!confirmDialog.id || !confirmDialog.item || confirmDialog.action !== "toggle") return;
     try {
-      const res = await fetch(`/api/admin/quotes/${q._id}`, {
+      const res = await fetch(`/api/admin/quotes/${confirmDialog.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active: newActiveStatus }),
+        body: JSON.stringify({ active: confirmDialog.newStatus }),
       });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
         setToast({
-          message: newActiveStatus
+          message: confirmDialog.newStatus
             ? "Quote activated successfully"
             : "Quote deactivated successfully",
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       } else {
         setToast({
           message: "Failed to update quote status",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       }
     } catch (e) {
       console.error("Toggle active failed", e);
@@ -200,6 +260,7 @@ export default function QuotesPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
     }
   };
 
@@ -516,7 +577,7 @@ export default function QuotesPage() {
                       inactiveLabel="Inactive"
                       onChange={(newActive) => {
                         if (newActive !== q.active) {
-                          toggleActive(q);
+                          toggleActiveClick(q);
                         }
                       }}
                     />
@@ -524,13 +585,13 @@ export default function QuotesPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-2 text-xs">
                       <button
-                        onClick={() => handleEdit(q)}
+                        onClick={() => handleEditClick(q)}
                         className="rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(q._id)}
+                        onClick={() => handleDeleteClick(q._id)}
                         className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
                       >
                         Delete
@@ -552,6 +613,39 @@ export default function QuotesPage() {
           </div>
         )}
       </div>
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "delete"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined })}
+        onConfirm={handleDelete}
+        title="Delete Quote"
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "toggle"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined })}
+        onConfirm={toggleActive}
+        title={confirmDialog.newStatus ? "Activate Quote" : "Deactivate Quote"}
+        message={confirmDialog.message}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="warning"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "edit"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined })}
+        onConfirm={handleEdit}
+        title="Edit Quote"
+        message={confirmDialog.message}
+        confirmText="Edit"
+        cancelText="Cancel"
+        variant="info"
+      />
     </div>
   );
 }

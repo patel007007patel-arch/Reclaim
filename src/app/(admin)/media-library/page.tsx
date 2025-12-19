@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Toast from "@/components/ui/toast/Toast";
 import Pagination from "@/components/tables/Pagination";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
 type MediaType = "video" | "audio";
 
@@ -36,6 +37,22 @@ export default function MediaLibraryPage() {
     type: "success",
     isVisible: false,
   });
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    id: string | null;
+    message: string;
+    action?: "delete" | "edit";
+    item?: MediaItem | null;
+  }>({
+    isOpen: false,
+    id: null,
+    message: "",
+    action: undefined,
+    item: null,
+  });
+  
   const [form, setForm] = useState<Partial<MediaItem>>({
     title: "",
     type: "video",
@@ -138,7 +155,19 @@ export default function MediaLibraryPage() {
     }
   };
 
-  const handleEdit = (item: MediaItem) => {
+  const handleEditClick = (item: MediaItem) => {
+    setConfirmDialog({
+      isOpen: true,
+      id: item._id,
+      message: "Are you sure you want to edit this media item?",
+      action: "edit",
+      item: item,
+    });
+  };
+
+  const handleEdit = () => {
+    if (!confirmDialog.item || confirmDialog.action !== "edit") return;
+    const item = confirmDialog.item;
     setEditingId(item._id);
     setShowForm(true);
     setForm({
@@ -151,10 +180,20 @@ export default function MediaLibraryPage() {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this media item?")) return;
+  const handleDeleteClick = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      id,
+      message: "Are you sure you want to delete this media item? This action cannot be undone.",
+      action: "delete",
+      item: null,
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDialog.id || confirmDialog.action !== "delete") return;
     try {
-      const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/media/${confirmDialog.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
@@ -163,12 +202,14 @@ export default function MediaLibraryPage() {
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null });
       } else {
         setToast({
           message: "Failed to delete media item",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null });
       }
     } catch (e) {
       console.error("Delete failed", e);
@@ -177,6 +218,7 @@ export default function MediaLibraryPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "" });
     }
   };
 
@@ -526,13 +568,13 @@ export default function MediaLibraryPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-2 text-xs">
                       <button
-                        onClick={() => handleEdit(item)}
+                        onClick={() => handleEditClick(item)}
                         className="rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(item._id)}
+                        onClick={() => handleDeleteClick(item._id)}
                         className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
                       >
                         Delete
@@ -554,6 +596,28 @@ export default function MediaLibraryPage() {
           </div>
         )}
       </div>
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "delete"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null })}
+        onConfirm={handleDelete}
+        title="Delete Media Item"
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "edit"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null })}
+        onConfirm={handleEdit}
+        title="Edit Media Item"
+        message={confirmDialog.message}
+        confirmText="Edit"
+        cancelText="Cancel"
+        variant="info"
+      />
     </div>
   );
 }

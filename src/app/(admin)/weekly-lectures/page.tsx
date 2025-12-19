@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Toast from "@/components/ui/toast/Toast";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
 import Pagination from "@/components/tables/Pagination";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
 interface WeeklyLecture {
   _id: string;
@@ -35,6 +36,26 @@ export default function WeeklyLecturesPage() {
     type: "success",
     isVisible: false,
   });
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    id: string | null;
+    message: string;
+    action?: "delete" | "toggle" | "edit";
+    item?: WeeklyLecture | null;
+    newStatus?: boolean;
+    toggleType?: "publish" | "archive";
+  }>({
+    isOpen: false,
+    id: null,
+    message: "",
+    action: undefined,
+    item: null,
+    newStatus: undefined,
+    toggleType: undefined,
+  });
+  
   const [form, setForm] = useState<Partial<WeeklyLecture>>({
     title: "",
     imageUrl: "",
@@ -149,7 +170,21 @@ export default function WeeklyLecturesPage() {
     }
   };
 
-  const handleEdit = (item: WeeklyLecture) => {
+  const handleEditClick = (item: WeeklyLecture) => {
+    setConfirmDialog({
+      isOpen: true,
+      id: item._id,
+      message: "Are you sure you want to edit this weekly lecture?",
+      action: "edit",
+      item: item,
+      newStatus: undefined,
+      toggleType: undefined,
+    });
+  };
+
+  const handleEdit = () => {
+    if (!confirmDialog.item || confirmDialog.action !== "edit") return;
+    const item = confirmDialog.item;
     setEditingId(item._id);
     setShowForm(true);
     setForm({
@@ -161,12 +196,25 @@ export default function WeeklyLecturesPage() {
       published: item.published,
       archived: item.archived,
     });
+    setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this weekly lecture?")) return;
+  const handleDeleteClick = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      id,
+      message: "Are you sure you want to delete this weekly lecture? This action cannot be undone.",
+      action: "delete",
+      item: null,
+      newStatus: undefined,
+      toggleType: undefined,
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDialog.id || confirmDialog.action !== "delete") return;
     try {
-      const res = await fetch(`/api/admin/weekly-lectures/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/weekly-lectures/${confirmDialog.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
@@ -175,12 +223,14 @@ export default function WeeklyLecturesPage() {
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
       } else {
         setToast({
           message: "Failed to delete weekly lecture",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
       }
     } catch (e) {
       console.error("Delete failed", e);
@@ -189,35 +239,50 @@ export default function WeeklyLecturesPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
     }
   };
 
-  const togglePublished = async (item: WeeklyLecture) => {
+  const togglePublishedClick = (item: WeeklyLecture) => {
     const newPublishedStatus = !item.published;
     const action = newPublishedStatus ? "publish" : "unpublish";
-    if (!confirm(`Are you sure you want to ${action} this weekly lecture?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      id: item._id,
+      message: `Are you sure you want to ${action} this weekly lecture?`,
+      action: "toggle",
+      item: item,
+      newStatus: newPublishedStatus,
+      toggleType: "publish",
+    });
+  };
+
+  const togglePublished = async () => {
+    if (!confirmDialog.id || !confirmDialog.item || confirmDialog.action !== "toggle" || confirmDialog.toggleType !== "publish") return;
     try {
-      const res = await fetch(`/api/admin/weekly-lectures/${item._id}`, {
+      const res = await fetch(`/api/admin/weekly-lectures/${confirmDialog.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ published: newPublishedStatus }),
+        body: JSON.stringify({ published: confirmDialog.newStatus }),
       });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
         setToast({
-          message: newPublishedStatus
+          message: confirmDialog.newStatus
             ? "Weekly lecture published successfully"
             : "Weekly lecture unpublished successfully",
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
       } else {
         setToast({
           message: "Failed to update publish status",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
       }
     } catch (e) {
       console.error("Toggle published failed", e);
@@ -226,35 +291,50 @@ export default function WeeklyLecturesPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
     }
   };
 
-  const toggleArchive = async (item: WeeklyLecture) => {
+  const toggleArchiveClick = (item: WeeklyLecture) => {
     const newArchivedStatus = !item.archived;
     const action = newArchivedStatus ? "archive" : "unarchive";
-    if (!confirm(`Are you sure you want to ${action} this weekly lecture?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      id: item._id,
+      message: `Are you sure you want to ${action} this weekly lecture?`,
+      action: "toggle",
+      item: item,
+      newStatus: newArchivedStatus,
+      toggleType: "archive",
+    });
+  };
+
+  const toggleArchive = async () => {
+    if (!confirmDialog.id || !confirmDialog.item || confirmDialog.action !== "toggle" || confirmDialog.toggleType !== "archive") return;
     try {
-      const res = await fetch(`/api/admin/weekly-lectures/${item._id}`, {
+      const res = await fetch(`/api/admin/weekly-lectures/${confirmDialog.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ archived: newArchivedStatus }),
+        body: JSON.stringify({ archived: confirmDialog.newStatus }),
       });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
         setToast({
-          message: newArchivedStatus
+          message: confirmDialog.newStatus
             ? "Weekly lecture archived successfully"
             : "Weekly lecture unarchived successfully",
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
       } else {
         setToast({
           message: "Failed to update archive status",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
       }
     } catch (e) {
       console.error("Toggle archive failed", e);
@@ -263,6 +343,7 @@ export default function WeeklyLecturesPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined });
     }
   };
 
@@ -576,7 +657,7 @@ export default function WeeklyLecturesPage() {
                         inactiveLabel="Draft"
                         onChange={(isPublished) => {
                           if (isPublished !== item.published) {
-                            togglePublished(item);
+                            togglePublishedClick(item);
                           }
                         }}
                       />
@@ -586,7 +667,7 @@ export default function WeeklyLecturesPage() {
                         inactiveLabel="Archived"
                         onChange={(isActive) => {
                           if (isActive !== !item.archived) {
-                            toggleArchive(item);
+                            toggleArchiveClick(item);
                           }
                         }}
                       />
@@ -595,13 +676,13 @@ export default function WeeklyLecturesPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-2 text-xs">
                       <button
-                        onClick={() => handleEdit(item)}
+                        onClick={() => handleEditClick(item)}
                         className="rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(item._id)}
+                        onClick={() => handleDeleteClick(item._id)}
                         className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
                       >
                         Delete
@@ -623,6 +704,50 @@ export default function WeeklyLecturesPage() {
           </div>
         )}
       </div>
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "delete"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined })}
+        onConfirm={handleDelete}
+        title="Delete Weekly Lecture"
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "toggle" && confirmDialog.toggleType === "publish"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined })}
+        onConfirm={togglePublished}
+        title={confirmDialog.newStatus ? "Publish Weekly Lecture" : "Unpublish Weekly Lecture"}
+        message={confirmDialog.message}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="warning"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "toggle" && confirmDialog.toggleType === "archive"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined })}
+        onConfirm={toggleArchive}
+        title={confirmDialog.newStatus ? "Archive Weekly Lecture" : "Unarchive Weekly Lecture"}
+        message={confirmDialog.message}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="warning"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "edit"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined, toggleType: undefined })}
+        onConfirm={handleEdit}
+        title="Edit Weekly Lecture"
+        message={confirmDialog.message}
+        confirmText="Edit"
+        cancelText="Cancel"
+        variant="info"
+      />
     </div>
   );
 }

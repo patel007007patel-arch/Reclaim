@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Toast from "@/components/ui/toast/Toast";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
 import Pagination from "@/components/tables/Pagination";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
 interface Affirmation {
   _id: string;
@@ -27,6 +28,23 @@ export default function AffirmationsPage() {
     message: "",
     type: "success",
     isVisible: false,
+  });
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    id: string | null;
+    message: string;
+    action?: "delete" | "toggle" | "edit";
+    item?: Affirmation | null;
+    newStatus?: boolean;
+  }>({
+    isOpen: false,
+    id: null,
+    message: "",
+    action: undefined,
+    item: null,
+    newStatus: undefined,
   });
   
   // Filters
@@ -138,7 +156,20 @@ export default function AffirmationsPage() {
     }
   };
 
-  const handleEdit = (item: Affirmation) => {
+  const handleEditClick = (item: Affirmation) => {
+    setConfirmDialog({
+      isOpen: true,
+      id: item._id,
+      message: "Are you sure you want to edit this affirmation?",
+      action: "edit",
+      item: item,
+      newStatus: undefined,
+    });
+  };
+
+  const handleEdit = () => {
+    if (!confirmDialog.item || confirmDialog.action !== "edit") return;
+    const item = confirmDialog.item;
     setEditingId(item._id);
     setShowForm(true);
     setForm({
@@ -150,12 +181,24 @@ export default function AffirmationsPage() {
         : "",
       archived: item.archived,
     });
+    setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this affirmation?")) return;
+  const handleDeleteClick = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      id,
+      message: "Are you sure you want to delete this affirmation? This action cannot be undone.",
+      action: "delete",
+      item: null,
+      newStatus: undefined,
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDialog.id || confirmDialog.action !== "delete") return;
     try {
-      const res = await fetch(`/api/admin/affirmations/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/affirmations/${confirmDialog.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
@@ -164,12 +207,14 @@ export default function AffirmationsPage() {
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       } else {
         setToast({
           message: "Failed to delete affirmation",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       }
     } catch (e) {
       console.error("Delete failed", e);
@@ -178,35 +223,49 @@ export default function AffirmationsPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
     }
   };
 
-  const toggleArchive = async (item: Affirmation) => {
+  const toggleArchiveClick = (item: Affirmation) => {
     const newArchivedStatus = !item.archived;
     const action = newArchivedStatus ? "archive" : "unarchive";
-    if (!confirm(`Are you sure you want to ${action} this affirmation?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      id: item._id,
+      message: `Are you sure you want to ${action} this affirmation?`,
+      action: "toggle",
+      item: item,
+      newStatus: newArchivedStatus,
+    });
+  };
+
+  const toggleArchive = async () => {
+    if (!confirmDialog.id || !confirmDialog.item || confirmDialog.action !== "toggle") return;
     try {
-      const res = await fetch(`/api/admin/affirmations/${item._id}`, {
+      const res = await fetch(`/api/admin/affirmations/${confirmDialog.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ archived: newArchivedStatus }),
+        body: JSON.stringify({ archived: confirmDialog.newStatus }),
       });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
         setToast({
-          message: newArchivedStatus
+          message: confirmDialog.newStatus
             ? "Affirmation archived successfully"
             : "Affirmation unarchived successfully",
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       } else {
         setToast({
           message: "Failed to update archive status",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
       }
     } catch (e) {
       console.error("Toggle archive failed", e);
@@ -215,6 +274,7 @@ export default function AffirmationsPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
     }
   };
 
@@ -488,7 +548,7 @@ export default function AffirmationsPage() {
                       inactiveLabel="Archived"
                       onChange={(isActive) => {
                         if (isActive !== !item.archived) {
-                          toggleArchive(item);
+                          toggleArchiveClick(item);
                         }
                       }}
                     />
@@ -496,13 +556,13 @@ export default function AffirmationsPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-2 text-xs">
                       <button
-                        onClick={() => handleEdit(item)}
+                        onClick={() => handleEditClick(item)}
                         className="rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(item._id)}
+                        onClick={() => handleDeleteClick(item._id)}
                         className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
                       >
                         Delete
@@ -524,6 +584,39 @@ export default function AffirmationsPage() {
           </div>
         )}
       </div>
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "delete"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined })}
+        onConfirm={handleDelete}
+        title="Delete Affirmation"
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "toggle"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined })}
+        onConfirm={toggleArchive}
+        title={confirmDialog.newStatus ? "Archive Affirmation" : "Unarchive Affirmation"}
+        message={confirmDialog.message}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="warning"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "edit"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined })}
+        onConfirm={handleEdit}
+        title="Edit Affirmation"
+        message={confirmDialog.message}
+        confirmText="Edit"
+        cancelText="Cancel"
+        variant="info"
+      />
     </div>
   );
 }

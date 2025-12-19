@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Toast from "@/components/ui/toast/Toast";
 import Pagination from "@/components/tables/Pagination";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
 type Target = "all" | "users";
 
@@ -41,6 +42,21 @@ export default function NotificationsPage() {
     message: "",
     type: "success",
     isVisible: false,
+  });
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    id: string | null;
+    message: string;
+    action?: "delete" | "edit";
+    item?: Notification | null;
+  }>({
+    isOpen: false,
+    id: null,
+    message: "",
+    action: undefined,
+    item: null,
   });
   
   // Filters
@@ -191,7 +207,19 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleEdit = (n: Notification) => {
+  const handleEditClick = (n: Notification) => {
+    setConfirmDialog({
+      isOpen: true,
+      id: n._id,
+      message: "Are you sure you want to edit this notification?",
+      action: "edit",
+      item: n,
+    });
+  };
+
+  const handleEdit = () => {
+    if (!confirmDialog.item || confirmDialog.action !== "edit") return;
+    const n = confirmDialog.item;
     setEditingId(n._id);
     setShowForm(true);
     setForm({
@@ -205,12 +233,23 @@ export default function NotificationsPage() {
     });
     setSelectedUserIds(n.userIds || []);
     setShowUserSelector(n.target === "users");
+    setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this notification?")) return;
+  const handleDeleteClick = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      id,
+      message: "Are you sure you want to delete this notification? This action cannot be undone.",
+      action: "delete",
+      item: null,
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDialog.id || confirmDialog.action !== "delete") return;
     try {
-      const res = await fetch(`/api/admin/notifications/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/notifications/${confirmDialog.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         await fetchItems();
@@ -219,12 +258,14 @@ export default function NotificationsPage() {
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null });
       } else {
         setToast({
           message: "Failed to delete notification",
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null });
       }
     } catch (e) {
       console.error("Delete failed", e);
@@ -233,6 +274,7 @@ export default function NotificationsPage() {
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, id: null, message: "" });
     }
   };
 
@@ -664,13 +706,13 @@ export default function NotificationsPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-2 text-xs">
                       <button
-                        onClick={() => handleEdit(n)}
+                        onClick={() => handleEditClick(n)}
                         className="rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(n._id)}
+                        onClick={() => handleDeleteClick(n._id)}
                         className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
                       >
                         Delete
@@ -692,6 +734,28 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "delete"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null })}
+        onConfirm={handleDelete}
+        title="Delete Notification"
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.action === "edit"}
+        onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null })}
+        onConfirm={handleEdit}
+        title="Edit Notification"
+        message={confirmDialog.message}
+        confirmText="Edit"
+        cancelText="Cancel"
+        variant="info"
+      />
     </div>
   );
 }

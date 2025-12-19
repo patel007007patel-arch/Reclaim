@@ -12,6 +12,7 @@ import Badge from "@/components/ui/badge/Badge";
 import Image from "next/image";
 import Toast from "@/components/ui/toast/Toast";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
 interface User {
   _id: string;
@@ -59,6 +60,19 @@ export default function UsersManagement() {
     type: "success",
     isVisible: false,
   });
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    userId: string | null;
+    message: string;
+    newStatus?: boolean;
+  }>({
+    isOpen: false,
+    userId: null,
+    message: "",
+    newStatus: undefined,
+  });
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -89,40 +103,51 @@ export default function UsersManagement() {
     fetchUsers();
   }, [page, search, activeFilter]);
 
-  const handleDeactivate = async (userId: string, currentActive: boolean) => {
+  const handleDeactivateClick = (userId: string, currentActive: boolean) => {
     const newActiveStatus = !currentActive;
     const action = newActiveStatus ? "activate" : "deactivate";
-    if (!confirm(`Are you sure you want to ${action} this user?`))
-      return;
+    setConfirmDialog({
+      isOpen: true,
+      userId,
+      message: `Are you sure you want to ${action} this user?`,
+      newStatus: newActiveStatus,
+    });
+  };
+
+  const handleDeactivate = async () => {
+    if (!confirmDialog.userId) return;
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
+      const res = await fetch(`/api/admin/users/${confirmDialog.userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // Include cookies for authentication
-        body: JSON.stringify({ active: newActiveStatus }),
+        body: JSON.stringify({ active: confirmDialog.newStatus }),
       });
       const data = await res.json();
       if (data.success) {
         await fetchUsers();
         setToast({
-          message: `User ${newActiveStatus ? "activated" : "deactivated"} successfully`,
+          message: `User ${confirmDialog.newStatus ? "activated" : "deactivated"} successfully`,
           type: "success",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, userId: null, message: "", newStatus: undefined });
       } else {
         setToast({
-          message: `Failed to ${action} user`,
+          message: `Failed to ${confirmDialog.newStatus ? "activate" : "deactivate"} user`,
           type: "error",
           isVisible: true,
         });
+        setConfirmDialog({ isOpen: false, userId: null, message: "", newStatus: undefined });
       }
     } catch (e) {
       console.error("Failed to update user", e);
       setToast({
-        message: `Failed to ${action} user`,
+        message: `Failed to ${confirmDialog.newStatus ? "activate" : "deactivate"} user`,
         type: "error",
         isVisible: true,
       });
+      setConfirmDialog({ isOpen: false, userId: null, message: "", newStatus: undefined });
     }
   };
 
@@ -322,7 +347,7 @@ export default function UsersManagement() {
                       active={user.active}
                       activeLabel="Active"
                       inactiveLabel="Inactive"
-                      onChange={(newActive) => handleDeactivate(user._id, !newActive)}
+                      onChange={(newActive) => handleDeactivateClick(user._id, !newActive)}
                     />
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -496,6 +521,18 @@ export default function UsersManagement() {
           </div>
         </div>
       )}
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, userId: null, message: "", newStatus: undefined })}
+        onConfirm={handleDeactivate}
+        title={confirmDialog.newStatus ? "Activate User" : "Deactivate User"}
+        message={confirmDialog.message}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="warning"
+      />
     </div>
   );
 }
+
