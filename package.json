@@ -6,7 +6,7 @@
     "dev": "next dev --webpack",
     "dev:webpack": "next dev --webpack",
     "dev:nodemon": "nodemon --watch src --exec \"npm run dev\"",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint ."
   },
