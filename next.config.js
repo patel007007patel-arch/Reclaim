@@ -8,9 +8,22 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer }) => {
-    // SVG handling - convert SVGs to React components
+    // Find the rule that handles images/assets
+    const fileLoaderRule = config.module.rules.find((rule) => {
+      if (rule.test && rule.test instanceof RegExp) {
+        return rule.test.test('.svg');
+      }
+      return false;
+    });
+
+    if (fileLoaderRule) {
+      fileLoaderRule.exclude = /\.svg$/i;
+    }
+
+    // SVG handling - convert SVGs to React components using SVGR
+    // This must come after excluding SVG from file-loader
     config.module.rules.push({
-      test: /\.svg$/,
+      test: /\.svg$/i,
       issuer: /\.[jt]sx?$/,
       use: [{
         loader: "@svgr/webpack",
