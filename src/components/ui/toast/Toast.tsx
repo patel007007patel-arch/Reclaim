@@ -65,13 +65,8 @@ export default function Toast({
 
   return (
     <div 
-      className="fixed top-4 right-4 z-[99999] animate-slide-in-right"
+      className="fixed top-4 right-4 z-[99999] pointer-events-auto"
       style={{ 
-        position: "fixed",
-        top: "1rem",
-        right: "1rem",
-        zIndex: 99999,
-        pointerEvents: "auto",
         animation: "slideInRight 0.3s ease-out"
       }}
     >
@@ -132,19 +127,6 @@ export default function Toast({
           />
         </div>
       </div>
-      
-      <style jsx global>{`
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(100%);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </div>
   );
 }
