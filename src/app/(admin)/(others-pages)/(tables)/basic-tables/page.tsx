@@ -25,13 +25,13 @@ interface User {
   };
   onboardingAnswers?: Array<{
     questionId: string;
-    questionTitle: string;
+    questionTitle?: string; // Optional, populated by API
     answer: any;
     answeredAt: string;
   }>;
   dailyCheckinAnswers?: Array<{
     questionId: string;
-    questionTitle: string;
+    questionTitle?: string; // Optional, populated by API
     answer: any;
     answeredAt: string;
     checkInDate: string;
@@ -474,7 +474,7 @@ export default function UsersManagement() {
                             <div className="space-y-2">
                               {answers.map((answer: any, idx: number) => (
                                 <div key={idx} className="text-xs text-gray-600 dark:text-gray-400 border-l-2 border-blue-200 dark:border-blue-800 pl-2">
-                                  <div className="font-medium">{answer.questionTitle}</div>
+                                  <div className="font-medium">{answer.questionTitle || `Question ID: ${answer.questionId}`}</div>
                                   <div className="mt-1">
                                     {typeof answer.answer === "object"
                                       ? JSON.stringify(answer.answer)

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import Post from "@/models/Post";
+import OnboardingQuestion from "@/models/OnboardingQuestion";
+import DailyCheckinQuestion from "@/models/DailyCheckinQuestion";
 import { verifyAdmin } from "@/lib/auth-helpers";
 
 export async function GET(
@@ -29,6 +31,46 @@ export async function GET(
       .select("title content imageUrl status visibility createdAt")
       .lean();
 
+    // Populate question titles for onboarding answers
+    let onboardingAnswers = user.onboardingAnswers || [];
+    if (onboardingAnswers.length > 0) {
+      const onboardingQuestionIds = onboardingAnswers.map((ans: any) => ans.questionId);
+      const onboardingQuestions = await OnboardingQuestion.find({
+        _id: { $in: onboardingQuestionIds },
+      })
+        .select("_id title")
+        .lean();
+      
+      const onboardingQuestionMap = new Map(
+        onboardingQuestions.map((q) => [q._id.toString(), q.title])
+      );
+
+      onboardingAnswers = onboardingAnswers.map((ans: any) => ({
+        ...ans,
+        questionTitle: onboardingQuestionMap.get(ans.questionId) || "Question not found",
+      }));
+    }
+
+    // Populate question titles for daily check-in answers
+    let dailyCheckinAnswers = user.dailyCheckinAnswers || [];
+    if (dailyCheckinAnswers.length > 0) {
+      const dailyCheckinQuestionIds = dailyCheckinAnswers.map((ans: any) => ans.questionId);
+      const dailyCheckinQuestions = await DailyCheckinQuestion.find({
+        _id: { $in: dailyCheckinQuestionIds },
+      })
+        .select("_id title")
+        .lean();
+      
+      const dailyCheckinQuestionMap = new Map(
+        dailyCheckinQuestions.map((q) => [q._id.toString(), q.title])
+      );
+
+      dailyCheckinAnswers = dailyCheckinAnswers.map((ans: any) => ({
+        ...ans,
+        questionTitle: dailyCheckinQuestionMap.get(ans.questionId) || "Question not found",
+      }));
+    }
+
     // Prepare export data
     const exportData = {
       user: {
@@ -38,8 +80,8 @@ export async function GET(
         birthdate: user.birthdate,
         streak: user.streak || 0,
         activity: user.activity || {},
-        onboardingAnswers: user.onboardingAnswers || [],
-        dailyCheckinAnswers: user.dailyCheckinAnswers || [],
+        onboardingAnswers,
+        dailyCheckinAnswers,
         deviceSyncStatus: user.deviceSyncStatus || {},
         active: user.active,
         createdAt: user.createdAt,

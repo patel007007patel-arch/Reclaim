@@ -59,7 +59,7 @@ Content-Type: application/json
 **Notes:**
 - Validates that all questions exist and are active
 - Replaces existing answers for the same questions
-- Stores question title along with answer for reference
+- Only stores questionId (normalized approach) - questionTitle is fetched when needed
 
 ---
 
@@ -209,22 +209,20 @@ Added `dailyCheckinAnswers` field to User model:
 
 ```typescript
 dailyCheckinAnswers?: Array<{
-  questionId: string;
-  questionTitle: string;
-  answer: any; // can be string, array, number
-  answeredAt: Date;
-  checkInDate: Date; // date of the check-in
-}>;
+    questionId: string;
+    answer: any; // can be string, array, number
+    answeredAt: Date;
+    checkInDate: Date; // date of the check-in
+  }>;
 ```
 
 The `onboardingAnswers` field already existed:
 ```typescript
 onboardingAnswers?: Array<{
-  questionId: string;
-  questionTitle: string;
-  answer: any; // can be string, array, date, number
-  answeredAt: Date;
-}>;
+    questionId: string;
+    answer: any; // can be string, array, date, number
+    answeredAt: Date;
+  }>;
 ```
 
 ---
@@ -286,5 +284,5 @@ curl -X GET "http://localhost:3000/api/app/daily-checkin-questions/submit?date=2
 ✅ **Streak Tracking**: Automatically calculates and updates user streak  
 ✅ **Activity Tracking**: Updates user's last check-in and total check-ins  
 ✅ **Date Filtering**: Can filter daily check-in answers by date  
-✅ **Question Titles**: Stores question titles for easy reference  
+✅ **Question Titles**: Fetched dynamically by questionId when needed (normalized data model)  
 

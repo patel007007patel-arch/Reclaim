@@ -15,13 +15,11 @@ export interface IUser extends Document {
   };
   onboardingAnswers?: Array<{
     questionId: string;
-    questionTitle: string;
     answer: any; // can be string, array, date, number
     answeredAt: Date;
   }>;
   dailyCheckinAnswers?: Array<{
     questionId: string;
-    questionTitle: string;
     answer: any; // can be string, array, number
     answeredAt: Date;
     checkInDate: Date; // date of the check-in
@@ -80,7 +78,6 @@ const UserSchema = new Schema<IUser>(
     onboardingAnswers: [
       {
         questionId: { type: String, required: true },
-        questionTitle: { type: String, required: true },
         answer: { type: Schema.Types.Mixed, required: true },
         answeredAt: { type: Date, default: Date.now },
       },
@@ -88,7 +85,6 @@ const UserSchema = new Schema<IUser>(
     dailyCheckinAnswers: [
       {
         questionId: { type: String, required: true },
-        questionTitle: { type: String, required: true },
         answer: { type: Schema.Types.Mixed, required: true },
         answeredAt: { type: Date, default: Date.now },
         checkInDate: { type: Date, required: true, default: Date.now },

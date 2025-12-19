@@ -45,20 +45,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create answer objects with question titles
-    const questionMap = new Map(
-      questions.map((q) => [q._id.toString(), q])
-    );
-
+    // Create answer objects (only store questionId, fetch title when needed)
     const answerObjects = answers.map((ans: any) => {
-      const question = questionMap.get(ans.questionId);
-      if (!question) {
-        throw new Error(`Question ${ans.questionId} not found`);
-      }
-
       return {
         questionId: ans.questionId,
-        questionTitle: question.title,
         answer: ans.answer,
         answeredAt: new Date(),
       };
@@ -78,11 +68,21 @@ export async function POST(req: NextRequest) {
       onboardingAnswers: updatedAnswers,
     });
 
+    // Fetch question titles for response
+    const questionMap = new Map(
+      questions.map((q) => [q._id.toString(), q.title])
+    );
+
+    const answersWithTitles = answerObjects.map((ans: any) => ({
+      ...ans,
+      questionTitle: questionMap.get(ans.questionId) || "Question not found",
+    }));
+
     return NextResponse.json(
       {
         success: true,
         message: "Onboarding answers submitted successfully",
-        answers: answerObjects,
+        answers: answersWithTitles,
       },
       { status: 200 }
     );
@@ -111,10 +111,28 @@ export async function GET(req: NextRequest) {
 
     const answers = user!.onboardingAnswers || [];
 
+    // Fetch question titles by questionId
+    const questionIds = answers.map((ans: any) => ans.questionId);
+    const questions = await OnboardingQuestion.find({
+      _id: { $in: questionIds },
+    })
+      .select("_id title")
+      .lean();
+
+    const questionMap = new Map(
+      questions.map((q) => [q._id.toString(), q.title])
+    );
+
+    // Populate questionTitle in response
+    const answersWithTitles = answers.map((ans: any) => ({
+      ...ans,
+      questionTitle: questionMap.get(ans.questionId) || "Question not found",
+    }));
+
     return NextResponse.json(
       {
         success: true,
-        answers,
+        answers: answersWithTitles,
       },
       { status: 200 }
     );
