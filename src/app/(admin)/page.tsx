@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { GroupIcon, BoxIconLine } from "@/icons";
+import { getIconComponent } from "@/utils/iconUtils";
 import {
   Table,
   TableBody,
@@ -13,7 +14,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 
-const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+const ReactApexChart = dynamic(() => import("react-apexcharts").catch(() => null), {
   ssr: false,
 });
 
@@ -279,7 +280,19 @@ export default function Dashboard() {
           {/* Active Users */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-              <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
+              {(() => {
+                try {
+                  const Icon = getIconComponent(GroupIcon);
+                  if (!Icon) {
+                    console.warn('GroupIcon is not a valid component:', GroupIcon);
+                    return null;
+                  }
+                  return <Icon className="text-gray-800 size-6 dark:text-white/90" />;
+                } catch (error) {
+                  console.error('Error rendering GroupIcon:', error);
+                  return null;
+                }
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -296,7 +309,19 @@ export default function Dashboard() {
           {/* Total Users */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-              <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
+              {(() => {
+                try {
+                  const Icon = getIconComponent(GroupIcon);
+                  if (!Icon) {
+                    console.warn('GroupIcon is not a valid component:', GroupIcon);
+                    return null;
+                  }
+                  return <Icon className="text-gray-800 size-6 dark:text-white/90" />;
+                } catch (error) {
+                  console.error('Error rendering GroupIcon:', error);
+                  return null;
+                }
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -313,7 +338,19 @@ export default function Dashboard() {
           {/* Recent Signups */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-              <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
+              {(() => {
+                try {
+                  const Icon = getIconComponent(GroupIcon);
+                  if (!Icon) {
+                    console.warn('GroupIcon is not a valid component:', GroupIcon);
+                    return null;
+                  }
+                  return <Icon className="text-gray-800 size-6 dark:text-white/90" />;
+                } catch (error) {
+                  console.error('Error rendering GroupIcon:', error);
+                  return null;
+                }
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -330,7 +367,19 @@ export default function Dashboard() {
           {/* Total Posts */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-              <BoxIconLine className="text-gray-800 dark:text-white/90" />
+              {(() => {
+                try {
+                  const Icon = getIconComponent(BoxIconLine);
+                  if (!Icon) {
+                    console.warn('BoxIconLine is not a valid component:', BoxIconLine);
+                    return null;
+                  }
+                  return <Icon className="text-gray-800 dark:text-white/90" />;
+                } catch (error) {
+                  console.error('Error rendering BoxIconLine:', error);
+                  return null;
+                }
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -350,7 +399,19 @@ export default function Dashboard() {
           {/* Recent Posts */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-              <BoxIconLine className="text-gray-800 dark:text-white/90" />
+              {(() => {
+                try {
+                  const Icon = getIconComponent(BoxIconLine);
+                  if (!Icon) {
+                    console.warn('BoxIconLine is not a valid component:', BoxIconLine);
+                    return null;
+                  }
+                  return <Icon className="text-gray-800 dark:text-white/90" />;
+                } catch (error) {
+                  console.error('Error rendering BoxIconLine:', error);
+                  return null;
+                }
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -367,7 +428,10 @@ export default function Dashboard() {
           {/* Pending Posts */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-xl dark:bg-yellow-900/30">
-              <BoxIconLine className="text-yellow-600 dark:text-yellow-400" />
+              {(() => {
+                const Icon = getIconComponent(BoxIconLine);
+                return Icon ? <Icon className="text-yellow-600 dark:text-yellow-400" /> : null;
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -384,7 +448,10 @@ export default function Dashboard() {
           {/* Flagged Posts */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-xl dark:bg-red-900/30">
-              <BoxIconLine className="text-red-600 dark:text-red-400" />
+              {(() => {
+                const Icon = getIconComponent(BoxIconLine);
+                return Icon ? <Icon className="text-red-600 dark:text-red-400" /> : null;
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -401,7 +468,19 @@ export default function Dashboard() {
           {/* Upcoming Content */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-              <BoxIconLine className="text-gray-800 dark:text-white/90" />
+              {(() => {
+                try {
+                  const Icon = getIconComponent(BoxIconLine);
+                  if (!Icon) {
+                    console.warn('BoxIconLine is not a valid component:', BoxIconLine);
+                    return null;
+                  }
+                  return <Icon className="text-gray-800 dark:text-white/90" />;
+                } catch (error) {
+                  console.error('Error rendering BoxIconLine:', error);
+                  return null;
+                }
+              })()}
             </div>
             <div className="flex items-end justify-between mt-5">
               <div>
@@ -443,7 +522,7 @@ export default function Dashboard() {
           <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
             Posts Overview (Monthly)
           </h3>
-          {chartData && (
+          {chartData && ReactApexChart && (
             <div className="max-w-full overflow-x-auto custom-scrollbar">
               <div className="min-w-[600px]">
                 <ReactApexChart

@@ -4,6 +4,7 @@ import Image from "next/image";
 import CountryMap from "./CountryMap";
 import { useState } from "react";
 import { MoreDotIcon } from "@/icons";
+import { getIconComponent } from "@/utils/iconUtils";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
@@ -32,7 +33,10 @@ export default function DemographicCard() {
 
         <div className="relative inline-block">
           <button onClick={toggleDropdown} className="dropdown-toggle">
-            <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
+            {(() => {
+              const Icon = getIconComponent(MoreDotIcon);
+              return Icon ? <Icon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" /> : null;
+            })()}
           </button>
           <Dropdown
             isOpen={isOpen}

@@ -2,6 +2,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Button from "@/components/ui/button/Button";
 import { BoxIcon } from "@/icons";
+import { getIconComponent } from "@/utils/iconUtils";
 import { Metadata } from "next";
 import React from "react";
 
@@ -30,10 +31,16 @@ export default function Buttons() {
         {/* Primary Button with Start Icon */}
         <ComponentCard title="Primary Button with Left Icon">
           <div className="flex items-center gap-5">
-            <Button size="sm" variant="primary" startIcon={<BoxIcon />}>
+            <Button size="sm" variant="primary" startIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
-            <Button size="md" variant="primary" startIcon={<BoxIcon />}>
+            <Button size="md" variant="primary" startIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
           </div>
@@ -41,10 +48,16 @@ export default function Buttons() {
         {/* Primary Button with Start Icon */}
         <ComponentCard title="Primary Button with Right Icon">
           <div className="flex items-center gap-5">
-            <Button size="sm" variant="primary" endIcon={<BoxIcon />}>
+            <Button size="sm" variant="primary" endIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
-            <Button size="md" variant="primary" endIcon={<BoxIcon />}>
+            <Button size="md" variant="primary" endIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
           </div>
@@ -64,10 +77,16 @@ export default function Buttons() {
         {/* Outline Button with Start Icon */}
         <ComponentCard title="Outline Button with Left Icon">
           <div className="flex items-center gap-5">
-            <Button size="sm" variant="outline" startIcon={<BoxIcon />}>
+            <Button size="sm" variant="outline" startIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
-            <Button size="md" variant="outline" startIcon={<BoxIcon />}>
+            <Button size="md" variant="outline" startIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
           </div>
@@ -75,10 +94,16 @@ export default function Buttons() {
         {/* Outline Button with Start Icon */}
         <ComponentCard title="Outline Button with Right Icon">
           <div className="flex items-center gap-5">
-            <Button size="sm" variant="outline" endIcon={<BoxIcon />}>
+            <Button size="sm" variant="outline" endIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
-            <Button size="md" variant="outline" endIcon={<BoxIcon />}>
+            <Button size="md" variant="outline" endIcon={(() => {
+              const Icon = getIconComponent(BoxIcon);
+              return Icon ? <Icon /> : null;
+            })()}>
               Button Text
             </Button>
           </div>

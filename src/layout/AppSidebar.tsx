@@ -26,64 +26,65 @@ import {
   BellIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
+import { getIconComponent } from "../utils/iconUtils";
 
 type NavItem = {
   name: string;
-  icon: React.ReactNode;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    icon: GridIcon,
     name: "Dashboard",
     path: "/"
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
-    icon: <UserCircleIcon />,
+    icon: UserCircleIcon,
     name: "Users Management",
     path: "/basic-tables"
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
-    icon: <TaskIcon />,
+    icon: TaskIcon,
     name: "Onboarding Questions",
     path: "/onboarding-questions",
   },
   {
-    icon: <TimeIcon />,
+    icon: TimeIcon,
     name: "Daily Check-In Questions",
     path: "/daily-checkin-questions",
   },
   {
-    icon: <CheckCircleIcon />,
+    icon: CheckCircleIcon,
     name: "Affirmations",
     path: "/affirmations",
   },
   {
-    icon: <DocsIcon />,
+    icon: DocsIcon,
     name: "Weekly Lecture",
     path: "/weekly-lectures",
   },
   {
-    icon: <ShootingStarIcon />,
+    icon: ShootingStarIcon,
     name: "Quotes",
     path: "/quotes",
   },
   {
-    icon: <VideoIcon />,
+    icon: VideoIcon,
     name: "Media Library",
     path: "/media-library",
   },
   {
-    icon: <ChatIcon />,
+    icon: ChatIcon,
     name: "Community Posts",
     path: "/community-posts",
   },
   {
-    icon: <BellIcon />,
+    icon: BellIcon,
     name: "Notifications",
     path: "/notifications",
   },
@@ -163,9 +164,11 @@ const AppSidebar: React.FC = () => {
   const renderMenuItems = (
     navItems: NavItem[],
     menuType: "main" | "others"
-  ) => (
+  ) => {
+    return (
     <ul className="flex flex-col gap-4">
-      {navItems.map((nav, index) => (
+      {navItems.map((nav, index) => {
+        return (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
@@ -187,20 +190,30 @@ const AppSidebar: React.FC = () => {
                     : "menu-item-icon-inactive"
                 }`}
               >
-                {nav.icon}
+                {(() => {
+                  const Icon = getIconComponent(nav.icon);
+                  return Icon ? <Icon /> : null;
+                })()}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
                 <span className={`menu-item-text`}>{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200  ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
-                  }`}
-                />
+                <>
+                  {(() => {
+                    const Icon = getIconComponent(ChevronDownIcon);
+                    return Icon ? (
+                      <Icon
+                        className={`ml-auto w-5 h-5 transition-transform duration-200  ${
+                          openSubmenu?.type === menuType &&
+                          openSubmenu?.index === index
+                            ? "rotate-180 text-brand-500"
+                            : ""
+                        }`}
+                      />
+                    ) : null;
+                  })()}
+                </>
               )}
             </button>
           ) : (
@@ -218,7 +231,10 @@ const AppSidebar: React.FC = () => {
                       : "menu-item-icon-inactive"
                   }`}
                 >
-                  {nav.icon}
+                  {(() => {
+                    const Icon = getIconComponent(nav.icon);
+                    return Icon ? <Icon /> : null;
+                  })()}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <span className={`menu-item-text`}>{nav.name}</span>
@@ -282,9 +298,11 @@ const AppSidebar: React.FC = () => {
             </div>
           )}
         </li>
-      ))}
+        );
+      })}
     </ul>
-  );
+    );
+  };
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -415,7 +433,12 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots />
+                  <>
+                    {(() => {
+                      const Icon = getIconComponent(HorizontaLDots);
+                      return Icon ? <Icon /> : null;
+                    })()}
+                  </>
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
@@ -432,7 +455,12 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   ""
                 ) : (
-                  <HorizontaLDots />
+                  <>
+                    {(() => {
+                      const Icon = getIconComponent(HorizontaLDots);
+                      return Icon ? <Icon /> : null;
+                    })()}
+                  </>
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}

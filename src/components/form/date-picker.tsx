@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Label from './Label';
 import { CalenderIcon } from '../../icons';
+import { getIconComponent } from '../../utils/iconUtils';
 import 'flatpickr/dist/flatpickr.css';
 
 // Type definitions for flatpickr
@@ -78,7 +79,10 @@ export default function DatePicker({
         />
 
         <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-          <CalenderIcon className="size-6" />
+          {(() => {
+            const Icon = getIconComponent(CalenderIcon);
+            return Icon ? <Icon className="size-6" /> : null;
+          })()}
         </span>
       </div>
     </div>

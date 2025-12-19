@@ -4,6 +4,7 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { getIconComponent } from "@/utils/iconUtils";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -167,11 +168,10 @@ const handleSignIn = async (e: any) => {
                       }}
                       className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                     >
-                      {showPassword ? (
-                        <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
-                      ) : (
-                        <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
-                      )}
+                      {(() => {
+                        const Icon = getIconComponent(showPassword ? EyeIcon : EyeCloseIcon);
+                        return Icon ? <Icon className="fill-gray-500 dark:fill-gray-400" /> : null;
+                      })()}
                     </span>
                   </div>
                 </div>
