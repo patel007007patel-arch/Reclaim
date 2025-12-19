@@ -87,14 +87,14 @@ export default function Dashboard() {
       }
 
       // Fetch recent users
-      const usersRes = await fetch("/api/admin/users?limit=5");
+      const usersRes = await fetch("/api/admin/users?limit=10");
       const usersData = await usersRes.json();
       if (usersData.success) {
         setRecentUsers(usersData.users);
       }
 
       // Fetch recent posts
-      const postsRes = await fetch("/api/admin/posts?limit=5");
+      const postsRes = await fetch("/api/admin/posts?limit=10");
       const postsData = await postsRes.json();
       if (postsData.success) {
         setRecentPosts(postsData.posts || []);
