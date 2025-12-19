@@ -14,9 +14,12 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 
-const ReactApexChart = dynamic(() => import("react-apexcharts").catch(() => null), {
-  ssr: false,
-});
+const ReactApexChart = dynamic(
+  () => import("react-apexcharts"),
+  {
+    ssr: false,
+  }
+);
 
 interface DashboardStats {
   activeUsers: number;
