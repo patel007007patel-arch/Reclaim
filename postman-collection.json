@@ -1,0 +1,1487 @@
+{
+	"info": {
+		"_postman_id": "admin-dashboard-api",
+		"name": "Admin Dashboard API",
+		"description": "Complete API collection for Admin Dashboard",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Admin Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "login"]
+						}
+					}
+				},
+				{
+					"name": "Admin Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\",\n  \"name\": \"Admin User\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "register"]
+						}
+					}
+				},
+				{
+					"name": "Get Admin Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "me"]
+						}
+					}
+				},
+				{
+					"name": "Update Admin Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Admin Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "profile"]
+						}
+					}
+				},
+				{
+					"name": "User Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"user123\",\n  \"name\": \"Test User\",\n  \"birthdate\": \"1990-01-01\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "register"]
+						}
+					}
+				},
+				{
+					"name": "User Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"user123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "login"]
+						}
+					}
+				},
+				{
+					"name": "User Social Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"provider\": \"google\",\n  \"providerId\": \"google_user_id_123\",\n  \"email\": \"user@gmail.com\",\n  \"name\": \"Google User\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/social-login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "social-login"]
+						}
+					}
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "me"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/dashboard/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "dashboard", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get Dashboard Charts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/dashboard/charts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "dashboard", "charts"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users?page=1&limit=20&search=&active=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "active",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "USER_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "USER_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export User Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/:id/export",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", ":id", "export"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "USER_ID_HERE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Onboarding Questions",
+			"item": [
+				{
+					"name": "List Onboarding Questions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/onboarding-questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "onboarding-questions"]
+						}
+					}
+				},
+				{
+					"name": "Create Onboarding Question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"What is your goal?\",\n  \"description\": \"Tell us about your goals\",\n  \"type\": \"single\",\n  \"options\": [\n    { \"label\": \"Option 1\", \"value\": \"opt1\" },\n    { \"label\": \"Option 2\", \"value\": \"opt2\" }\n  ],\n  \"order\": 1,\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/onboarding-questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "onboarding-questions"]
+						}
+					}
+				},
+				{
+					"name": "Update Onboarding Question",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Question\",\n  \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/onboarding-questions/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "onboarding-questions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "QUESTION_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Onboarding Question",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/onboarding-questions/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "onboarding-questions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "QUESTION_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Reorder Onboarding Questions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"questionIds\": [\"id1\", \"id2\", \"id3\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/onboarding-questions/reorder",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "onboarding-questions", "reorder"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Daily Check-In Questions",
+			"item": [
+				{
+					"name": "List Daily Check-In Questions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/daily-checkin-questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "daily-checkin-questions"]
+						}
+					}
+				},
+				{
+					"name": "Create Daily Check-In Question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"How are you feeling today?\",\n  \"description\": \"Rate your mood\",\n  \"type\": \"scale\",\n  \"options\": [\n    { \"label\": \"1-10\", \"value\": \"1-10\" }\n  ],\n  \"order\": 1,\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/daily-checkin-questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "daily-checkin-questions"]
+						}
+					}
+				},
+				{
+					"name": "Update Daily Check-In Question",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Question\",\n  \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/daily-checkin-questions/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "daily-checkin-questions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "QUESTION_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Daily Check-In Question",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/daily-checkin-questions/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "daily-checkin-questions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "QUESTION_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Reorder Daily Check-In Questions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"questionIds\": [\"id1\", \"id2\", \"id3\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/daily-checkin-questions/reorder",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "daily-checkin-questions", "reorder"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Affirmations",
+			"item": [
+				{
+					"name": "List Affirmations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/affirmations?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "affirmations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Affirmation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Daily Affirmation\",\n  \"text\": \"I am capable of achieving my goals\",\n  \"reflectionPrompt\": \"What does this mean to you?\",\n  \"scheduledFor\": \"2024-01-15T00:00:00.000Z\",\n  \"archived\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/affirmations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "affirmations"]
+						}
+					}
+				},
+				{
+					"name": "Update Affirmation",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"text\": \"Updated affirmation text\",\n  \"archived\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/affirmations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "affirmations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "AFFIRMATION_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Affirmation",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/affirmations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "affirmations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "AFFIRMATION_ID_HERE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Weekly Lectures",
+			"item": [
+				{
+					"name": "List Weekly Lectures",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/weekly-lectures?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "weekly-lectures"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Weekly Lecture",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Week 1: Introduction\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"affirmationText\": \"You are on the right path\",\n  \"reflectionText\": \"Reflect on your journey\",\n  \"weekOf\": \"2024-01-15T00:00:00.000Z\",\n  \"published\": false,\n  \"archived\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/weekly-lectures",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "weekly-lectures"]
+						}
+					}
+				},
+				{
+					"name": "Update Weekly Lecture",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Title\",\n  \"published\": true,\n  \"archived\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/weekly-lectures/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "weekly-lectures", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "LECTURE_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Weekly Lecture",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/weekly-lectures/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "weekly-lectures", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "LECTURE_ID_HERE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Quotes",
+			"item": [
+				{
+					"name": "List Quotes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/quotes?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "quotes"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Quote",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"text\": \"The only way to do great work is to love what you do\",\n  \"author\": \"Steve Jobs\",\n  \"tags\": [\"motivation\", \"success\"],\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/quotes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "quotes"]
+						}
+					}
+				},
+				{
+					"name": "Update Quote",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"text\": \"Updated quote text\",\n  \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/quotes/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "quotes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "QUOTE_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Quote",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/quotes/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "quotes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "QUOTE_ID_HERE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Media Library",
+			"item": [
+				{
+					"name": "List Media Items",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/media?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "media"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Media Item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Video Title\",\n  \"type\": \"video\",\n  \"url\": \"https://example.com/video.mp4\",\n  \"thumbnailUrl\": \"https://example.com/thumb.jpg\",\n  \"durationSeconds\": 300,\n  \"tags\": [\"motivation\", \"wellness\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/media",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "media"]
+						}
+					}
+				},
+				{
+					"name": "Update Media Item",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Title\",\n  \"tags\": [\"updated\", \"tags\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/media/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "media", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "MEDIA_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Media Item",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/media/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "media", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "MEDIA_ID_HERE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Community Posts",
+			"item": [
+				{
+					"name": "List Posts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/posts?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "posts"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"USER_ID_HERE\",\n  \"title\": \"Post Title\",\n  \"content\": \"Post content here\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"status\": \"approved\",\n  \"visibility\": \"public\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/posts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "posts"]
+						}
+					}
+				},
+				{
+					"name": "Update Post",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\",\n  \"published\": true,\n  \"flagged\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/posts/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "posts", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "POST_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Post",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/posts/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "posts", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "POST_ID_HERE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "List Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/notifications?page=1&limit=20&status=&target=&search=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "notifications"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "target",
+									"value": ""
+								},
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"New Feature Available\",\n  \"message\": \"Check out our new feature!\",\n  \"target\": \"all\",\n  \"userIds\": [],\n  \"scheduledFor\": \"2024-01-15T10:00:00.000Z\",\n  \"status\": \"draft\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/notifications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "notifications"]
+						}
+					}
+				},
+				{
+					"name": "Update Notification",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Title\",\n  \"status\": \"scheduled\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/notifications/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "notifications", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "NOTIFICATION_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "admin_token={{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/notifications/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "notifications", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "NOTIFICATION_ID_HERE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "App APIs",
+			"item": [
+				{
+					"name": "Get Active Onboarding Questions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/app/onboarding-questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "onboarding-questions"]
+						}
+					}
+				},
+				{
+					"name": "Get Active Daily Check-In Questions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/app/daily-checkin-questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "daily-checkin-questions"]
+						}
+					}
+				},
+				{
+					"name": "Get Public Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/app/posts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "posts"]
+						}
+					}
+				},
+				{
+					"name": "Create Post (User)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"My Post\",\n  \"content\": \"Post content here\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"visibility\": \"public\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/app/posts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "posts"]
+						}
+					}
+				},
+				{
+					"name": "Submit Onboarding Answers",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"answers\": [\n    {\n      \"questionId\": \"QUESTION_ID_HERE\",\n      \"answer\": \"Option 1\"\n    },\n    {\n      \"questionId\": \"QUESTION_ID_HERE\",\n      \"answer\": [\"Option A\", \"Option B\"]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/app/onboarding-questions/submit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "onboarding-questions", "submit"]
+						},
+						"description": "**Authentication Required:** User Bearer token\n\nSubmit answers to onboarding questions. Replace QUESTION_ID_HERE with actual question IDs from the Get Active Onboarding Questions endpoint."
+					}
+				},
+				{
+					"name": "Get User's Onboarding Answers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/app/onboarding-questions/submit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "onboarding-questions", "submit"]
+						},
+						"description": "**Authentication Required:** User Bearer token\n\nGet all onboarding answers for the authenticated user."
+					}
+				},
+				{
+					"name": "Submit Daily Check-In Answers",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"answers\": [\n    {\n      \"questionId\": \"QUESTION_ID_HERE\",\n      \"answer\": \"7\"\n    },\n    {\n      \"questionId\": \"QUESTION_ID_HERE\",\n      \"answer\": \"Feeling great today!\"\n    }\n  ],\n  \"checkInDate\": \"2024-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/app/daily-checkin-questions/submit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "daily-checkin-questions", "submit"]
+						},
+						"description": "**Authentication Required:** User Bearer token\n\nSubmit answers to daily check-in questions. Replace QUESTION_ID_HERE with actual question IDs. checkInDate is optional (defaults to today). Automatically updates user streak and activity."
+					}
+				},
+				{
+					"name": "Get User's Daily Check-In Answers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/app/daily-checkin-questions/submit?date=2024-01-15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "daily-checkin-questions", "submit"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2024-01-15",
+									"description": "Optional: Filter by specific date (YYYY-MM-DD). Omit to get all answers."
+								}
+							]
+						},
+						"description": "**Authentication Required:** User Bearer token\n\nGet daily check-in answers for the authenticated user. Use date query parameter to filter by specific date. Returns current streak in response."
+					}
+				}
+			]
+		},
+		{
+			"name": "Seed Data",
+			"item": [
+				{
+					"name": "Seed All Demo Data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/seed",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "seed"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
