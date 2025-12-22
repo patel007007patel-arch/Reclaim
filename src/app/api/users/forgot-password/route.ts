@@ -1,0 +1,77 @@
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
+import OTP from "@/models/OTP";
+import { sendOTPEmail } from "@/lib/email";
+
+// Generate 6-digit OTP
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+export async function POST(req: Request) {
+  try {
+    await connectDB();
+
+    const { email } = await req.json();
+
+    if (!email) {
+      return NextResponse.json(
+        { success: false, message: "Email is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return NextResponse.json({
+        success: true,
+        message: "If the email exists, an OTP has been sent.",
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Delete any existing OTPs for this email
+    await OTP.deleteMany({ email: email.toLowerCase(), type: "user" });
+
+    // Save new OTP
+    await OTP.create({
+      email: email.toLowerCase(),
+      otp,
+      type: "user",
+      expiresAt,
+      verified: false,
+    });
+
+    // Send OTP email
+    const emailSent = await sendOTPEmail(email, otp, "user");
+
+    if (!emailSent) {
+      return NextResponse.json(
+        { success: false, message: "Failed to send OTP email" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "OTP has been sent to your email",
+    });
+  } catch (error: any) {
+    console.error("FORGOT PASSWORD ERROR:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Server error",
+        error: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+

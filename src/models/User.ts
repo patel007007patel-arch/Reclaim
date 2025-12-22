@@ -29,6 +29,8 @@ export interface IUser extends Document {
     deviceId?: string;
     platform?: string;
   };
+  // Note: OneSignal External User ID is set automatically by frontend
+  // No need to store Player ID - OneSignal handles the mapping
   active: boolean;
 }
 

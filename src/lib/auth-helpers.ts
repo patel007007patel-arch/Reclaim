@@ -3,15 +3,24 @@ import { verifyJWT } from "@/lib/verify";
 import Admin from "@/models/Admin";
 import User from "@/models/User";
 
-// Admin authentication helper
+// Admin authentication helper - supports both cookie (browser) and Bearer token (Postman)
 export async function verifyAdmin(req: NextRequest) {
   try {
-    const token = req.cookies.get("admin_token")?.value;
+    // Try to get token from cookie first (for browser requests)
+    let token = req.cookies.get("admin_token")?.value;
+
+    // If no cookie token, try Bearer token from Authorization header (for Postman/API clients)
+    if (!token) {
+      const authHeader = req.headers.get("authorization") || "";
+      if (authHeader.startsWith("Bearer ")) {
+        token = authHeader.slice(7);
+      }
+    }
 
     if (!token) {
       return {
         error: NextResponse.json(
-          { success: false, message: "Not authenticated" },
+          { success: false, message: "Not authenticated. Please login first." },
           { status: 401 }
         ),
         admin: null,
@@ -22,7 +31,7 @@ export async function verifyAdmin(req: NextRequest) {
     if (!decoded || !decoded.id) {
       return {
         error: NextResponse.json(
-          { success: false, message: "Invalid token" },
+          { success: false, message: "Invalid or expired token" },
           { status: 401 }
         ),
         admin: null,

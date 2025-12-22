@@ -131,7 +131,7 @@ const handleSignIn = async (e: any) => {
                     </span>
                   </div>
                   <Link
-                    href="/reset-password"
+                    href="/reset-password?type=admin"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
                     Forgot password?

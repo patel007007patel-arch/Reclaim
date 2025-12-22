@@ -322,7 +322,7 @@ export default function NotificationsPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 relative">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-gray-800 dark:text-gray-100">
-            {editingId ? "Edit Notification" : "Create Notification"}
+            {editingId ? "Edit Notification" : "Send Notification"}
           </h2>
           <button
             type="button"
@@ -625,7 +625,7 @@ export default function NotificationsPage() {
             onClick={handleAddClick}
             className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-600 transition-colors"
           >
-            + Create Notification
+            + Send Notification
           </button>
         </div>
         <div className="max-w-full overflow-x-auto">

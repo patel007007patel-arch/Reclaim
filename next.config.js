@@ -2,9 +2,10 @@
 const nextConfig = {
   reactStrictMode: false,
   
-  // Enable experimental features for better performance
+  // Enable instrumentation hook for cron jobs
   experimental: {
     optimizePackageImports: ['apexcharts', 'react-apexcharts', '@fullcalendar/react'],
+    instrumentationHook: true,
   },
 
   webpack: (config, { isServer }) => {
