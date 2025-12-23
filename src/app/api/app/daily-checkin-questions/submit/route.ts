@@ -6,14 +6,31 @@ import { verifyUser } from "@/lib/auth-helpers";
 
 // POST: submit daily check-in question answers
 // Authentication required - Bearer token in Authorization header
+//
+// HOW WE KNOW WHO SUBMITTED:
+// 1. Frontend sends JWT token in Authorization header: "Bearer <token>"
+// 2. verifyUser(req) extracts token from header (NOT from body!)
+// 3. Token is decoded to get user ID (payload.id)
+// 4. User is fetched from database using that ID
+// 5. That's how we know WHO submitted - the authenticated user!
+//
+// Request body only contains: { answers: [{ questionId, answer }], checkInDate? }
+// The user identity comes from the JWT token in the header, not the body!
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    // Verify user authentication
+    // STEP 1: Extract JWT token from Authorization header
+    // Header format: "Authorization: Bearer <jwt_token>"
+    // The token contains the user ID (encoded when user logged in)
     const { error, user } = await verifyUser(req);
     if (error) return error;
+    
+    // STEP 2: Now we know WHO submitted - it's user!._id
+    // The user object contains: { _id, name, email, dailyCheckinAnswers, ... }
+    // This user ID came from the JWT token, NOT from the request body!
 
+    // STEP 3: Get the answers from request body (questionId + answer only)
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json(
