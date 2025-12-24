@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import OnboardingQuestion from "@/models/OnboardingQuestion";
-import { verifyAdmin } from "@/lib/auth-helpers";
+import { verifyAdminOrUser, verifyAdmin } from "@/lib/auth-helpers";
 
 // GET: list all onboarding questions (ordered)
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    // Verify admin authentication
-    const { error } = await verifyAdmin(req);
+    // Verify admin or user authentication
+    const { error } = await verifyAdminOrUser(req);
     if (error) return error;
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
@@ -71,12 +71,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // If order is not provided, set it to the end (max order + 1)
+    let finalOrder = typeof order === "number" ? order : undefined;
+    if (finalOrder === undefined) {
+      const maxOrderQuestion = await OnboardingQuestion.findOne()
+        .sort({ order: -1 })
+        .select("order")
+        .lean();
+      finalOrder = maxOrderQuestion ? maxOrderQuestion.order + 1 : 0;
+    }
+
     const question = await OnboardingQuestion.create({
       title,
       description,
       type,
       options: options || [],
-      order: typeof order === "number" ? order : 0,
+      order: finalOrder,
       active: typeof active === "boolean" ? active : true,
     });
 

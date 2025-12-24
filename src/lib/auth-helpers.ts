@@ -115,3 +115,41 @@ export async function verifyUser(req: NextRequest) {
   }
 }
 
+// Verify either admin or user - allows both to access the endpoint
+export async function verifyAdminOrUser(req: NextRequest) {
+  try {
+    // First try to verify as admin
+    const adminResult = await verifyAdmin(req);
+    if (!adminResult.error && adminResult.admin) {
+      return { error: null, admin: adminResult.admin, user: null, isAdmin: true };
+    }
+
+    // If admin verification failed, try to verify as user
+    const userResult = await verifyUser(req);
+    if (!userResult.error && userResult.user) {
+      return { error: null, admin: null, user: userResult.user, isAdmin: false };
+    }
+
+    // If both failed, return the more specific error (prefer admin error if available)
+    return {
+      error: adminResult.error || userResult.error || NextResponse.json(
+        { success: false, message: "Not authenticated. Please login first." },
+        { status: 401 }
+      ),
+      admin: null,
+      user: null,
+      isAdmin: false,
+    };
+  } catch (error: any) {
+    return {
+      error: NextResponse.json(
+        { success: false, message: "Authentication error", error: error.message },
+        { status: 500 }
+      ),
+      admin: null,
+      user: null,
+      isAdmin: false,
+    };
+  }
+}
+

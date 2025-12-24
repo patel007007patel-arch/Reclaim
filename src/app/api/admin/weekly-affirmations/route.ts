@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Post from "@/models/Post";
-import User from "@/models/User";
+import WeeklyAffirmation from "@/models/WeeklyAffirmation";
 import { verifyAdminOrUser, verifyAdmin } from "@/lib/auth-helpers";
 
-// GET: list community/public posts (for moderation)
+// GET: list weekly affirmations
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
@@ -13,12 +12,11 @@ export async function GET(req: NextRequest) {
     const { error } = await verifyAdminOrUser(req);
     if (error) return error;
     const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search") || "";
+    const active = searchParams.get("active");
+    const archived = searchParams.get("archived");
     const pageParam = searchParams.get("page");
     const limitParam = searchParams.get("limit");
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "";
-    const published = searchParams.get("published");
-    const flagged = searchParams.get("flagged");
     
     // Pagination is optional - if not provided, return all data
     const usePagination = pageParam !== null && limitParam !== null;
@@ -27,38 +25,34 @@ export async function GET(req: NextRequest) {
     const skip = usePagination ? (page - 1) * limit : 0;
 
     // Build query
-    const query: any = { deletedAt: null };
+    const query: any = {};
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
-        { content: { $regex: search, $options: "i" } },
+        { text: { $regex: search, $options: "i" } },
       ];
     }
-    if (status) {
-      query.status = status;
+    if (active !== null && active !== "") {
+      query.active = active === "true";
     }
-    if (published !== null && published !== "") {
-      query.published = published === "true";
-    }
-    if (flagged !== null && flagged !== "") {
-      query.flagged = flagged === "true";
+    if (archived !== null && archived !== "") {
+      query.archived = archived === "true";
     }
 
-    const total = await Post.countDocuments(query);
+    const total = await WeeklyAffirmation.countDocuments(query);
     
-    let queryBuilder = Post.find(query)
-      .sort({ createdAt: -1 })
-      .populate("user", "name email");
+    let queryBuilder = WeeklyAffirmation.find(query)
+      .sort({ createdAt: -1 });
     
     if (usePagination) {
       queryBuilder = queryBuilder.skip(skip).limit(limit);
     }
     
-    const items = await queryBuilder.lean();
+    const affirmations = await queryBuilder.lean();
 
     const response: any = {
       success: true,
-      posts: items,
+      affirmations,
     };
     
     if (usePagination) {
@@ -72,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error: any) {
-    console.error("POST LIST ERROR:", error);
+    console.error("WEEKLY AFFIRMATIONS LIST ERROR:", error);
     return NextResponse.json(
       { success: false, message: "Server error", error: error.message },
       { status: 500 }
@@ -80,7 +74,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: (optional) create post on behalf of a user from admin
+// POST: create new weekly affirmation
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
@@ -88,6 +82,7 @@ export async function POST(req: NextRequest) {
     // Verify admin authentication
     const { error } = await verifyAdmin(req);
     if (error) return error;
+
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json(
@@ -96,39 +91,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { userId, title, content, imageUrl, status, visibility } = body;
-    if (!userId || !title || !content) {
+    const { title, text, reflectionPrompt, scheduledFor, active, archived } = body;
+
+    if (!text) {
       return NextResponse.json(
-        { success: false, message: "userId, title and content are required" },
+        { success: false, message: "text is required" },
         { status: 400 }
       );
     }
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    const item = await Post.create({
-      user: user._id,
+    const affirmation = await WeeklyAffirmation.create({
       title,
-      content,
-      imageUrl,
-      status: status || "approved",
-      visibility: visibility || "public",
+      text,
+      reflectionPrompt,
+      scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+      active: typeof active === "boolean" ? active : true,
+      archived: typeof archived === "boolean" ? archived : false,
     });
 
-    return NextResponse.json({ success: true, item }, { status: 201 });
+    // Reload to ensure all fields are populated
+    const savedAffirmation = await WeeklyAffirmation.findById(affirmation._id).lean();
+
+    return NextResponse.json(
+      { success: true, affirmation: savedAffirmation },
+      { status: 201 }
+    );
   } catch (error: any) {
-    console.error("POST CREATE ERROR:", error);
+    console.error("WEEKLY AFFIRMATION CREATE ERROR:", error);
     return NextResponse.json(
       { success: false, message: "Server error", error: error.message },
       { status: 500 }
     );
   }
 }
-
-

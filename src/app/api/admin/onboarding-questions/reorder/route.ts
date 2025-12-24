@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     await Promise.all(
       order.map((id, index) =>
-        OnboardingQuestion.findByIdAndUpdate(id, { order: index }).exec()
+        OnboardingQuestion.findByIdAndUpdate(id, { order: index + 1 }).exec()
       )
     );
 

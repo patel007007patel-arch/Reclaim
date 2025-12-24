@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     await Promise.all(
       order.map((id, index) =>
-        DailyCheckinQuestion.findByIdAndUpdate(id, { order: index }).exec()
+        DailyCheckinQuestion.findByIdAndUpdate(id, { order: index + 1 }).exec()
       )
     );
 

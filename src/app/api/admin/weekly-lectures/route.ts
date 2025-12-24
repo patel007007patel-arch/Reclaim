@@ -12,12 +12,17 @@ export async function GET(req: NextRequest) {
     const { error } = await verifyAdmin(req);
     if (error) return error;
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const skip = (page - 1) * limit;
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
     const search = searchParams.get("search") || "";
     const published = searchParams.get("published");
     const archived = searchParams.get("archived");
+    
+    // Pagination is optional - if not provided, return all data
+    const usePagination = pageParam !== null && limitParam !== null;
+    const page = usePagination ? parseInt(pageParam || "1") : 1;
+    const limit = usePagination ? parseInt(limitParam || "20") : 0;
+    const skip = usePagination ? (page - 1) * limit : 0;
 
     // Build query
     const query: any = {};
@@ -36,24 +41,31 @@ export async function GET(req: NextRequest) {
     }
 
     const total = await WeeklyLecture.countDocuments(query);
-    const totalPages = Math.ceil(total / limit);
-
-    const items = await WeeklyLecture.find(query)
-      .sort({ weekOf: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
     
-    return NextResponse.json({ 
-      success: true, 
+    let queryBuilder = WeeklyLecture.find(query)
+      .sort({ weekOf: -1 });
+    
+    if (usePagination) {
+      queryBuilder = queryBuilder.skip(skip).limit(limit);
+    }
+    
+    const items = await queryBuilder.lean();
+    
+    const response: any = {
+      success: true,
       items,
-      pagination: {
+    };
+    
+    if (usePagination) {
+      response.pagination = {
         page,
         limit,
         total,
-        pages: totalPages,
-      }
-    }, { status: 200 });
+        pages: Math.ceil(total / limit),
+      };
+    }
+    
+    return NextResponse.json(response, { status: 200 });
   } catch (error: any) {
     console.error("LECTURE LIST ERROR:", error);
     return NextResponse.json(

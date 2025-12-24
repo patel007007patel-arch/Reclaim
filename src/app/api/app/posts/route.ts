@@ -6,19 +6,55 @@ import { uploadFileToFirebase } from "@/lib/firebase";
 
 // GET: public community feed (approved, not deleted)
 // No authentication required - public endpoint
-export async function GET() {
+// Pagination is optional - if page/limit not provided, returns all items (up to 1000 for safety)
+export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    const items = await Post.find({
+    
+    const { searchParams } = new URL(req.url);
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
+    
+    // Pagination is optional - if not provided, return all data (with safety limit)
+    const usePagination = pageParam !== null && limitParam !== null;
+    const page = usePagination ? parseInt(pageParam || "1") : 1;
+    const limit = usePagination ? parseInt(limitParam || "20") : 1000; // Safety limit when no pagination
+    const skip = usePagination ? (page - 1) * limit : 0;
+    
+    const query = {
       status: "approved",
       visibility: "public",
       deletedAt: null,
-    })
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
+    };
+    
+    const total = await Post.countDocuments(query);
+    
+    let queryBuilder = Post.find(query)
+      .sort({ createdAt: -1 });
+    
+    if (usePagination) {
+      queryBuilder = queryBuilder.skip(skip).limit(limit);
+    } else {
+      queryBuilder = queryBuilder.limit(limit); // Safety limit
+    }
+    
+    const items = await queryBuilder.lean();
 
-    return NextResponse.json({ success: true, items }, { status: 200 });
+    const response: any = {
+      success: true,
+      items,
+    };
+    
+    if (usePagination) {
+      response.pagination = {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      };
+    }
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error: any) {
     console.error("APP POST LIST ERROR:", error);
     return NextResponse.json(

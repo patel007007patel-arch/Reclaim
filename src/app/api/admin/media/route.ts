@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import MediaItem from "@/models/MediaItem";
-import { verifyAdmin } from "@/lib/auth-helpers";
+import { verifyAdminOrUser, verifyAdmin } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    // Verify admin authentication
-    const { error } = await verifyAdmin(req);
+    // Verify admin or user authentication
+    const { error } = await verifyAdminOrUser(req);
     if (error) return error;
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const skip = (page - 1) * limit;
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
     const search = searchParams.get("search") || "";
     const type = searchParams.get("type") || "";
     const tag = searchParams.get("tag") || "";
+    
+    // Pagination is optional - if not provided, return all data
+    const usePagination = pageParam !== null && limitParam !== null;
+    const page = usePagination ? parseInt(pageParam || "1") : 1;
+    const limit = usePagination ? parseInt(limitParam || "20") : 0;
+    const skip = usePagination ? (page - 1) * limit : 0;
 
     // Build query
     const query: any = {};
@@ -31,24 +36,31 @@ export async function GET(req: NextRequest) {
     }
 
     const total = await MediaItem.countDocuments(query);
-    const totalPages = Math.ceil(total / limit);
-
-    const items = await MediaItem.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
     
-    return NextResponse.json({ 
-      success: true, 
+    let queryBuilder = MediaItem.find(query)
+      .sort({ createdAt: -1 });
+    
+    if (usePagination) {
+      queryBuilder = queryBuilder.skip(skip).limit(limit);
+    }
+    
+    const items = await queryBuilder.lean();
+    
+    const response: any = {
+      success: true,
       items,
-      pagination: {
+    };
+    
+    if (usePagination) {
+      response.pagination = {
         page,
         limit,
         total,
-        pages: totalPages,
-      }
-    }, { status: 200 });
+        pages: Math.ceil(total / limit),
+      };
+    }
+    
+    return NextResponse.json(response, { status: 200 });
   } catch (error: any) {
     console.error("MEDIA LIST ERROR:", error);
     return NextResponse.json(

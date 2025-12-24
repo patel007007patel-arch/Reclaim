@@ -347,7 +347,7 @@
 				{
 					"name": "Logout",
 					"request": {
-						"method": "POST",
+						"method": "GET",
 						"header": [
 							{
 								"key": "Cookie",

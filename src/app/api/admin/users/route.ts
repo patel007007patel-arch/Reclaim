@@ -14,9 +14,14 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const active = searchParams.get("active");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const skip = (page - 1) * limit;
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
+    
+    // Pagination is optional - if not provided, return all data
+    const usePagination = pageParam !== null && limitParam !== null;
+    const page = usePagination ? parseInt(pageParam || "1") : 1;
+    const limit = usePagination ? parseInt(limitParam || "20") : 0;
+    const skip = usePagination ? (page - 1) * limit : 0;
 
     // Build query
     const query: any = {};
@@ -30,26 +35,33 @@ export async function GET(req: NextRequest) {
       query.active = active === "true";
     }
 
-    const [users, total] = await Promise.all([
-      User.find(query)
-        .select("-password")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      User.countDocuments(query),
-    ]);
+    const total = await User.countDocuments(query);
+    
+    let queryBuilder = User.find(query)
+      .select("-password")
+      .sort({ createdAt: -1 });
+    
+    if (usePagination) {
+      queryBuilder = queryBuilder.skip(skip).limit(limit);
+    }
+    
+    const users = await queryBuilder.lean();
 
-    return NextResponse.json({
+    const response: any = {
       success: true,
       users,
-      pagination: {
+    };
+    
+    if (usePagination) {
+      response.pagination = {
         page,
         limit,
         total,
         pages: Math.ceil(total / limit),
-      },
-    });
+      };
+    }
+
+    return NextResponse.json(response);
   } catch (error: any) {
     console.error("Get users error:", error);
     return NextResponse.json(

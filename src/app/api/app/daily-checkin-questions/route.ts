@@ -10,7 +10,13 @@ export async function GET() {
       .sort({ order: 1, createdAt: 1 })
       .lean();
 
-    return NextResponse.json({ success: true, questions }, { status: 200 });
+    // Transform order to start from 1 instead of 0
+    const questionsWithOrder = questions.map((q, index) => ({
+      ...q,
+      order: index + 1,
+    }));
+
+    return NextResponse.json({ success: true, questions: questionsWithOrder }, { status: 200 });
   } catch (error: any) {
     console.error("APP DAILY LIST ERROR:", error);
     return NextResponse.json(
