@@ -27,6 +27,7 @@ export default function ResourcesPage() {
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [activeTab, setActiveTab] = useState<ResourceCategory>("journey");
@@ -289,12 +290,6 @@ export default function ResourcesPage() {
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
           Resources
         </h1>
-        <button
-          onClick={handleAddClick}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          + Add Resource
-        </button>
       </div>
 
       {/* Tabs */}
@@ -319,41 +314,92 @@ export default function ResourcesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <input
-          type="text"
-          placeholder="Search resources..."
-          value={searchFilter}
-          onChange={(e) => {
-            setSearchFilter(e.target.value);
-            setPage(1);
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white flex-1"
-        />
-        <select
-          value={activeFilter}
-          onChange={(e) => {
-            setActiveFilter(e.target.value);
-            setPage(1);
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
         >
-          <option value="">All Status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
-        <select
-          value={archivedFilter}
-          onChange={(e) => {
-            setArchivedFilter(e.target.value);
-            setPage(1);
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-        >
-          <option value="">All</option>
-          <option value="false">Not Archived</option>
-          <option value="true">Archived</option>
-        </select>
+          <h3 className="text-sm font-medium text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+          </h3>
+          <svg
+            className={`w-5 h-5 text-gray-400 transition-transform ${showFilters ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showFilters && (
+          <div className="p-4 grid gap-4 md:grid-cols-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Search
+              </label>
+              <input
+                type="text"
+                placeholder="Search by title, description..."
+                value={searchFilter}
+                onChange={(e) => {
+                  setSearchFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Status
+              </label>
+              <select
+                value={activeFilter}
+                onChange={(e) => {
+                  setActiveFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              >
+                <option value="">All Status</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Archived
+              </label>
+              <select
+                value={archivedFilter}
+                onChange={(e) => {
+                  setArchivedFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              >
+                <option value="">All</option>
+                <option value="false">Not Archived</option>
+                <option value="true">Archived</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setSearchFilter("");
+                  setActiveFilter("");
+                  setArchivedFilter("");
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-gray-200 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Form */}
@@ -487,62 +533,79 @@ export default function ResourcesPage() {
       )}
 
       {/* Table */}
-      {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading...</div>
-      ) : items.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No resources found</div>
-      ) : (
-        <>
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+          <h2 className="text-sm font-medium text-gray-800 dark:text-gray-100">
+            Resources ({items.length})
+          </h2>
+          <button
+            onClick={handleAddClick}
+            className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-600 transition-colors"
+          >
+            + Add Resource
+          </button>
+        </div>
+        <div className="max-w-full overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-gray-100 text-xs font-medium uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:text-gray-400">
+              <tr>
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {loading ? (
+                <tr>
+                  <td className="px-4 py-4 text-xs text-gray-500" colSpan={4}>
+                    Loading...
+                  </td>
+                </tr>
+              ) : items.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-4 text-xs text-gray-500" colSpan={4}>
+                    No resources found
+                  </td>
+                </tr>
+              ) : (
+                items.map((item) => (
+                  <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{item.title}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 capitalize">{item.category}</td>
+                    <td className="px-4 py-3">
+                      <StatusToggle
+                        active={item.active}
+                        activeLabel="Active"
+                        inactiveLabel="Inactive"
+                        onChange={() => handleToggleActive(item._id, item.active)}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleEditClick(item)}
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-xs font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(item._id)}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 text-xs font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {items.map((item) => (
-                    <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{item.title}</td>
-                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 capitalize">{item.category}</td>
-                      <td className="px-4 py-3">
-                        <StatusToggle
-                          active={item.active}
-                          activeLabel="Active"
-                          inactiveLabel="Inactive"
-                          onChange={() => handleToggleActive(item._id, item.active)}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditClick(item)}
-                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(item._id)}
-                            className="text-red-600 hover:text-red-800 dark:text-red-400"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          {totalPages > 1 && (
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          )}
-        </>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {totalPages > 1 && (
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       )}
 
       <ConfirmationDialog
