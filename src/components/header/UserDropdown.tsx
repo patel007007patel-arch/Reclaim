@@ -4,7 +4,6 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { deleteCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 
 interface Admin {
@@ -39,8 +38,11 @@ export default function UserDropdown() {
   };
 
   const handleLogout = () => {
-    deleteCookie("admin_token"); // ✅ clear admin token
-    router.push("/signin");    // ✅ redirect
+    // Delete cookie using document.cookie (more reliable on client-side)
+    if (typeof document !== "undefined") {
+      document.cookie = "admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+    }
+    router.push("/signin"); // ✅ redirect
   };
 
 
