@@ -63,21 +63,21 @@ const navItems: NavItem[] = [
     name: "Daily Affirmations",
     path: "/daily-affirmations",
   },
-  {
-    icon: CheckCircleIcon,
-    name: "Weekly Affirmations",
-    path: "/weekly-affirmations",
-  },
+  // {
+  //   icon: CheckCircleIcon,
+  //   name: "Weekly Affirmations",
+  //   path: "/weekly-affirmations",
+  // },
   {
     icon: DocsIcon,
     name: "Resources",
     path: "/resources",
   },
-  {
-    icon: DocsIcon,
-    name: "Weekly Lecture",
-    path: "/weekly-lectures",
-  },
+  // {
+  //   icon: DocsIcon,
+  //   name: "Weekly Lecture",
+  //   path: "/weekly-lectures",
+  // },
   {
     icon: ShootingStarIcon,
     name: "Quotes",

@@ -15,6 +15,8 @@ interface Post {
   published?: boolean;
   visibility: "public" | "private";
   flagged: boolean;
+  flagCount?: number;
+  archived: boolean;
   createdAt: string;
   user?: {
     _id: string;
@@ -71,30 +73,52 @@ export default function CommunityPostsPage() {
       const res = await fetch(`/api/admin/posts?${params}`);
       const data = await res.json();
       if (data.success) {
-        setItems(data.posts || data.items || []);
+        const posts = data.posts || data.items || [];
+        setItems(posts);
         if (data.pagination) {
           setTotalPages(data.pagination.pages || 1);
+        } else {
+          setTotalPages(1);
         }
       } else {
+        console.error("API returned error:", data.message);
         setItems([]);
+        setToast({
+          message: data.message || "Failed to load posts",
+          type: "error",
+          isVisible: true,
+        });
       }
     } catch (e) {
       console.error("Failed to load posts", e);
       setItems([]);
+      setToast({
+        message: "Failed to load posts. Please check your connection.",
+        type: "error",
+        isVisible: true,
+      });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchItems();
+    // Only fetch on client side
+    if (typeof window !== 'undefined') {
+      fetchItems();
+    }
   }, [page, searchFilter, statusFilter, publishedFilter, flaggedFilter]);
 
   const updatePostClick = (id: string, payload: Partial<Post>) => {
     // Determine action for confirmation
     let confirmMessage = "";
     let title = "Update Post";
-    if (payload.status === "approved") {
+    if (payload.archived !== undefined) {
+      confirmMessage = payload.archived
+        ? "Are you sure you want to archive this post?"
+        : "Are you sure you want to unarchive this post?";
+      title = payload.archived ? "Archive Post" : "Unarchive Post";
+    } else if (payload.status === "approved") {
       confirmMessage = "Are you sure you want to approve this post?";
       title = "Approve Post";
     } else if (payload.status === "rejected") {
@@ -440,16 +464,27 @@ export default function CommunityPostsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
-                    {p.flagged ? "Flagged" : "—"}
+                    {p.flagged ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        {p.flagCount || 0} flags
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex flex-wrap items-center justify-end gap-2 text-xs">
-                      <button
-                        onClick={() => updatePostClick(p._id, { flagged: !p.flagged })}
-                        className="rounded-lg border border-yellow-200 px-2.5 py-1 text-[11px] font-medium text-yellow-700 hover:bg-yellow-50 dark:border-yellow-800/70 dark:text-yellow-200 dark:hover:bg-yellow-900/40"
-                      >
-                        {p.flagged ? "Unflag" : "Flag"}
-                      </button>
+                      {p.flagged && (
+                        <button
+                          onClick={() => updatePostClick(p._id, { archived: !p.archived })}
+                          className="rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                        >
+                          {p.archived ? "Unarchive" : "Archive"}
+                        </button>
+                      )}
                       <button
                         onClick={() => deletePostClick(p._id)}
                         className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
@@ -490,6 +525,8 @@ export default function CommunityPostsPage() {
         onClose={() => setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, payload: undefined })}
         onConfirm={() => updatePost()}
         title={
+          confirmDialog.payload?.archived === true ? "Archive Post" :
+          confirmDialog.payload?.archived === false ? "Unarchive Post" :
           confirmDialog.payload?.status === "approved" ? "Approve Post" :
           confirmDialog.payload?.status === "rejected" ? "Reject Post" :
           confirmDialog.payload?.published === true ? "Publish Post" :

@@ -21,11 +21,22 @@ export async function GET(req: NextRequest) {
     const limit = usePagination ? parseInt(limitParam || "20") : 1000; // Safety limit when no pagination
     const skip = usePagination ? (page - 1) * limit : 0;
     
-    const query = {
+    // Build query - exclude archived and deleted posts
+    const query: any = {
       status: "approved",
       visibility: "public",
       deletedAt: null,
     };
+    
+    // Exclude archived posts (archived must be false or not exist)
+    query.$and = [
+      {
+        $or: [
+          { archived: false },
+          { archived: { $exists: false } }
+        ]
+      }
+    ];
     
     const total = await Post.countDocuments(query);
     

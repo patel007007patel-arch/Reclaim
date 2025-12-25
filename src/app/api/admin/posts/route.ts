@@ -20,55 +20,83 @@ export async function GET(req: NextRequest) {
     const published = searchParams.get("published");
     const flagged = searchParams.get("flagged");
     
-    // Pagination is optional - if not provided, return all data
-    const usePagination = pageParam !== null && limitParam !== null;
-    const page = usePagination ? parseInt(pageParam || "1") : 1;
-    const limit = usePagination ? parseInt(limitParam || "20") : 0;
-    const skip = usePagination ? (page - 1) * limit : 0;
+    // Pagination handling
+    const page = pageParam ? parseInt(pageParam) : 1;
+    const limit = limitParam ? parseInt(limitParam) : 20; // Default to 20 if not provided
+    const skip = (page - 1) * limit;
 
-    // Build query
-    const query: any = { deletedAt: null };
+    // Build query - only show non-deleted posts
+    // In MongoDB, { deletedAt: null } matches both null and non-existent fields
+    const query: any = { 
+      $or: [
+        { deletedAt: null },
+        { deletedAt: { $exists: false } }
+      ]
+    };
+    
+    // Add search filter - combine with $and to properly merge conditions
+    const conditions: any[] = [{ $or: query.$or }];
+    
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { content: { $regex: search, $options: "i" } },
-      ];
+      conditions.push({
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { content: { $regex: search, $options: "i" } },
+        ]
+      });
     }
-    if (status) {
-      query.status = status;
+    
+    // Build final query
+    const finalQuery: any = conditions.length > 1 ? { $and: conditions } : query;
+    
+    // Add other filters directly (MongoDB will AND them)
+    if (status && status !== "") {
+      finalQuery.status = status;
     }
-    if (published !== null && published !== "") {
-      query.published = published === "true";
+    if (published !== null && published !== "" && published !== undefined) {
+      finalQuery.published = published === "true";
     }
-    if (flagged !== null && flagged !== "") {
-      query.flagged = flagged === "true";
+    if (flagged !== null && flagged !== "" && flagged !== undefined) {
+      finalQuery.flagged = flagged === "true";
     }
+    
+    // Use finalQuery for the actual database query
+    const dbQuery = finalQuery;
 
-    const total = await Post.countDocuments(query);
+    const total = await Post.countDocuments(dbQuery);
+    console.log("Posts query:", JSON.stringify(dbQuery, null, 2));
+    console.log("Total posts found:", total);
+    console.log("Pagination - page:", page, "limit:", limit, "skip:", skip);
     
-    let queryBuilder = Post.find(query)
+    let queryBuilder = Post.find(dbQuery)
       .sort({ createdAt: -1 })
-      .populate("user", "name email");
+      .populate("user", "name email")
+      .populate("flags", "name email");
     
-    if (usePagination) {
-      queryBuilder = queryBuilder.skip(skip).limit(limit);
-    }
+    // Always apply pagination (with default limit of 20)
+    queryBuilder = queryBuilder.skip(skip).limit(limit);
     
     const items = await queryBuilder.lean();
+    console.log("Posts returned:", items.length);
+    
+    // Calculate flagCount for each post if not already set
+    const itemsWithFlagCount = items.map((item: any) => ({
+      ...item,
+      flagCount: item.flagCount !== undefined ? item.flagCount : (item.flags?.length || 0),
+      archived: item.archived !== undefined ? item.archived : false,
+    }));
 
     const response: any = {
       success: true,
-      posts: items,
-    };
-    
-    if (usePagination) {
-      response.pagination = {
+      posts: itemsWithFlagCount,
+      total: total,
+      pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
-      };
-    }
+        pages: Math.ceil(total / limit) || 1,
+      },
+    };
 
     return NextResponse.json(response, { status: 200 });
   } catch (error: any) {

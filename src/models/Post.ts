@@ -9,6 +9,9 @@ export interface IPost extends Document {
   published: boolean;
   visibility: "public" | "private";
   flagged: boolean;
+  flags?: Types.ObjectId[]; // Array of user IDs who flagged this post
+  flagCount?: number; // Total number of users who flagged
+  archived: boolean;
   deletedAt?: Date | null;
 }
 
@@ -33,10 +36,18 @@ const PostSchema = new Schema<IPost>(
       default: "public",
     },
     flagged: { type: Boolean, default: false },
+    flags: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    flagCount: { type: Number, default: 0 },
+    archived: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
+
+// Virtual for flagCount (auto-calculate from flags array length)
+PostSchema.virtual("computedFlagCount").get(function() {
+  return this.flags?.length || 0;
+});
 
 const Post: Model<IPost> =
   (mongoose.models.Post as Model<IPost>) ||

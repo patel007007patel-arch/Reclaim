@@ -6,7 +6,8 @@ import DatePicker from "@/components/form/date-picker";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
-type QuestionType = "single" | "multi" | "date" | "number" | "days" | "text";
+type QuestionType = "single" | "multi" | "date" | "single-picker";
+type TextInputType = "plain-text" | "number" | "price";
 
 interface Option {
   _id?: string;
@@ -20,6 +21,7 @@ interface Question {
   description?: string;
   type: QuestionType;
   options: Option[];
+  textInputType?: TextInputType;
   order: number;
   active: boolean;
 }
@@ -33,6 +35,7 @@ export default function OnboardingQuestionsPage() {
     description: "",
     type: "multi",
     options: [],
+      textInputType: undefined,
     active: true,
   });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -90,7 +93,10 @@ export default function OnboardingQuestionsPage() {
   };
 
   useEffect(() => {
-    fetchQuestions();
+    // Only fetch on client side
+    if (typeof window !== 'undefined') {
+      fetchQuestions();
+    }
   }, [searchFilter, activeFilter, typeFilter]);
 
   const resetForm = () => {
@@ -99,6 +105,7 @@ export default function OnboardingQuestionsPage() {
       description: "",
       type: "multi",
       options: [],
+      textInputType: undefined,
       active: true,
     });
     setEditingId(null);
@@ -176,6 +183,7 @@ export default function OnboardingQuestionsPage() {
       description: q.description,
       type: q.type,
       options: q.options || [],
+      textInputType: q.textInputType || (q.type === "single-picker" ? "plain-text" : undefined),
       active: q.active,
     });
     setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
@@ -446,22 +454,22 @@ export default function OnboardingQuestionsPage() {
                 const newType = e.target.value as QuestionType;
                 // Reset options when changing type (except if switching between compatible types)
                 let newOptions = form.options || [];
-                if ((newType === "text") || 
-                    (newType === "date" && form.type !== "date") ||
-                    (newType === "number" && form.type !== "number") ||
-                    ((newType === "single" || newType === "multi") && form.type !== "single" && form.type !== "multi") ||
-                    (newType === "days" && form.type !== "days")) {
+                let newTextInputType = form.textInputType;
+                if (newType === "date" && form.type !== "date") {
                   newOptions = [];
+                } else if ((newType === "single" || newType === "multi") && form.type !== "single" && form.type !== "multi") {
+                  newOptions = [];
+                } else if (newType === "single-picker" && form.type !== "single-picker") {
+                  newOptions = [];
+                  newTextInputType = "plain-text"; // Default for single-picker
                 }
-                setForm((f) => ({ ...f, type: newType, options: newOptions }));
+                setForm((f) => ({ ...f, type: newType, options: newOptions, textInputType: newTextInputType }));
               }}
             >
               <option value="single">Single choice</option>
               <option value="multi">Multi choice</option>
               <option value="date">Date</option>
-              <option value="number">Number</option>
-              <option value="days">Days per week</option>
-              <option value="text">Text</option>
+              <option value="single-picker">Single Picker</option>
             </select>
           </div>
 
@@ -540,103 +548,98 @@ export default function OnboardingQuestionsPage() {
             </div>
           )}
 
-          {/* Days Options Management */}
-          {form.type === "days" && (
-            <div className="md:col-span-2 space-y-2">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                Days Options
-              </label>
-              <div className="space-y-2">
-                {/* Preset Days Options */}
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: "7 days", value: "7" },
-                    { label: "14 days", value: "14" },
-                    { label: "30 days", value: "30" },
-                    { label: "60 days", value: "60" },
-                    { label: "90 days", value: "90" },
-                  ].map((preset) => {
-                    const exists = (form.options || []).some((opt) => opt.value === preset.value);
-                    return (
-                      <button
-                        key={preset.value}
-                        type="button"
-                        onClick={() => {
-                          if (exists) {
-                            const newOptions = (form.options || []).filter(
-                              (opt) => opt.value !== preset.value
-                            );
-                            setForm((f) => ({ ...f, options: newOptions }));
-                          } else {
-                            const newOptions = [...(form.options || []), preset];
-                            setForm((f) => ({ ...f, options: newOptions }));
-                          }
-                        }}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          exists
-                            ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
-                            : "border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    );
-                  })}
-                </div>
+          {/* Single Picker Options Management */}
+          {form.type === "single-picker" && (
+            <div className="md:col-span-2 space-y-3">
+              {/* Text Input Type Selection for Single Picker */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Text Input Type 
+                </label>
+                <select
+                  className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  value={form.textInputType || "plain-text"}
+                  onChange={(e) => setForm((f) => ({ ...f, textInputType: e.target.value as TextInputType }))}
+                >
+                  <option value="plain-text">Plain Text</option>
+                  <option value="number">Number</option>
+                  <option value="price">Price</option>
+                </select>
+              </div>
 
-                {/* Custom Days Options */}
-                <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                    Custom Days:
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Single Picker Options
+                </label>
+                
+                {/* Preview of how options will appear */}
+                {(form.options || []).length > 0 && (
+                  <div className="mb-3 mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                      Preview (how users will see it):
+                    </div>
+                    <select
+                      disabled
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                    >
+                      <option value="">Select an option...</option>
+                      {(form.options || []).map((opt, idx) => (
+                        <option key={idx} value={opt.value}>
+                          {opt.label || opt.value || `Option ${idx + 1}`}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  {(form.options || [])
-                    .filter((opt) => !["7", "14", "30", "60", "90"].includes(opt.value))
-                    .map((opt, idx) => {
-                      const actualIdx = (form.options || []).findIndex((o) => o === opt);
-                      return (
-                        <div key={actualIdx} className="flex gap-2">
-                          <input
-                            type="number"
-                            placeholder="Number of days (e.g., 15)"
-                            min="1"
-                            className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
-                            value={opt.value}
-                            onChange={(e) => {
-                              const daysValue = e.target.value;
-                              const newOptions = [...(form.options || [])];
-                              newOptions[actualIdx] = {
-                                ...newOptions[actualIdx],
-                                value: daysValue,
-                                label: daysValue ? `${daysValue} days` : "",
-                              };
-                              setForm((f) => ({ ...f, options: newOptions }));
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newOptions = (form.options || []).filter(
-                                (_, i) => i !== actualIdx
-                              );
-                              setForm((f) => ({ ...f, options: newOptions }));
-                            }}
-                            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      );
-                    })}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newOptions = [...(form.options || []), { label: " days", value: "" }];
-                      setForm((f) => ({ ...f, options: newOptions }));
-                    }}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  >
-                    + Add Custom Days
-                  </button>
+                )}
+                
+                <div className="space-y-2">
+                {/* Custom Options */}
+                {(form.options || []).map((opt, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Label (e.g., Monday, Tuesday)"
+                      className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
+                      value={opt.label}
+                      onChange={(e) => {
+                        const newOptions = [...(form.options || [])];
+                        newOptions[idx] = { ...newOptions[idx], label: e.target.value };
+                        setForm((f) => ({ ...f, options: newOptions }));
+                      }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Value (e.g., monday, tuesday)"
+                      className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
+                      value={opt.value}
+                      onChange={(e) => {
+                        const newOptions = [...(form.options || [])];
+                        newOptions[idx] = { ...newOptions[idx], value: e.target.value };
+                        setForm((f) => ({ ...f, options: newOptions }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newOptions = (form.options || []).filter((_, i) => i !== idx);
+                        setForm((f) => ({ ...f, options: newOptions }));
+                      }}
+                      className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newOptions = [...(form.options || []), { label: "", value: "" }];
+                    setForm((f) => ({ ...f, options: newOptions }));
+                  }}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  + Add Option
+                </button>
                 </div>
               </div>
             </div>
@@ -698,107 +701,6 @@ export default function OnboardingQuestionsPage() {
             </div>
           )}
 
-          {/* Number Options Management */}
-          {form.type === "number" && (
-            <div className="md:col-span-2 space-y-2">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                Number Options
-              </label>
-              <div className="space-y-2">
-                {/* Preset Number Options */}
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: "1", value: "1" },
-                    { label: "5", value: "5" },
-                    { label: "10", value: "10" },
-                    { label: "25", value: "25" },
-                    { label: "50", value: "50" },
-                    { label: "100", value: "100" },
-                  ].map((preset) => {
-                    const exists = (form.options || []).some((opt) => opt.value === preset.value);
-                    return (
-                      <button
-                        key={preset.value}
-                        type="button"
-                        onClick={() => {
-                          if (exists) {
-                            const newOptions = (form.options || []).filter(
-                              (opt) => opt.value !== preset.value
-                            );
-                            setForm((f) => ({ ...f, options: newOptions }));
-                          } else {
-                            const newOptions = [...(form.options || []), preset];
-                            setForm((f) => ({ ...f, options: newOptions }));
-                          }
-                        }}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          exists
-                            ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
-                            : "border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom Number Options */}
-                <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                    Custom Numbers:
-                  </div>
-                  {(form.options || [])
-                    .filter((opt) => !["1", "5", "10", "25", "50", "100"].includes(opt.value))
-                    .map((opt, idx) => {
-                      const actualIdx = (form.options || []).findIndex((o) => o === opt);
-                      return (
-                        <div key={actualIdx} className="flex gap-2">
-                          <input
-                            type="number"
-                            placeholder="Enter number (e.g., 15)"
-                            className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
-                            value={opt.value}
-                            onChange={(e) => {
-                              const numValue = e.target.value;
-                              const newOptions = [...(form.options || [])];
-                              newOptions[actualIdx] = {
-                                ...newOptions[actualIdx],
-                                value: numValue,
-                                label: numValue || "",
-                              };
-                              setForm((f) => ({ ...f, options: newOptions }));
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newOptions = (form.options || []).filter(
-                                (_, i) => i !== actualIdx
-                              );
-                              setForm((f) => ({ ...f, options: newOptions }));
-                            }}
-                            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      );
-                    })}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newOptions = [...(form.options || []), { label: "", value: "" }];
-                      setForm((f) => ({ ...f, options: newOptions }));
-                    }}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  >
-                    + Add Custom Number
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="md:col-span-2 flex justify-end gap-2 pt-2">
             {editingId && (
@@ -884,9 +786,7 @@ export default function OnboardingQuestionsPage() {
                 <option value="single">Single Choice</option>
                 <option value="multi">Multi Choice</option>
                 <option value="date">Date</option>
-                <option value="number">Number</option>
-                <option value="days">Days</option>
-                <option value="text">Text</option>
+                <option value="single-picker">Single Picker</option>
               </select>
             </div>
             <div className="flex items-end">
@@ -989,7 +889,12 @@ export default function OnboardingQuestionsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs capitalize text-gray-600 dark:text-gray-300">
-                    {q.type}
+                    <div>{q.type}</div>
+                    {(q.type === "single" || q.type === "multi" || q.type === "single-picker") && q.options && q.options.length > 0 && (
+                      <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                        {q.options.length} option{q.options.length !== 1 ? "s" : ""}: {q.options.map(opt => opt.label || opt.value).join(", ")}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">

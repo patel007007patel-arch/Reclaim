@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Label from './Label';
 import { CalenderIcon } from '../../icons';
 import { getIconComponent } from '../../utils/iconUtils';
@@ -28,44 +28,87 @@ export default function DatePicker({
   placeholder,
 }: PropsType) {
   const flatpickrInstance = useRef<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Dynamically import flatpickr only on client side
     const initFlatpickr = async () => {
-      if (typeof window === 'undefined') return;
+      if (typeof window === 'undefined' || !mounted) return;
 
-      const flatpickr = (await import('flatpickr')).default;
+      try {
+        const flatpickr = (await import('flatpickr')).default;
 
-      // Destroy existing instance if any
-      if (flatpickrInstance.current) {
-        if (!Array.isArray(flatpickrInstance.current)) {
-          flatpickrInstance.current.destroy();
+        // Check if element exists
+        const element = document.getElementById(id);
+        if (!element) {
+          console.warn(`DatePicker: Element with id "${id}" not found`);
+          return;
         }
-        flatpickrInstance.current = null;
-      }
 
-      // Initialize flatpickr
-      flatpickrInstance.current = flatpickr(`#${id}`, {
-        mode: mode || "single",
-        static: true,
-        monthSelectorType: "static",
-        dateFormat: "Y-m-d",
-        defaultDate,
-        onChange,
-      });
+        // Destroy existing instance if any
+        if (flatpickrInstance.current) {
+          try {
+            if (!Array.isArray(flatpickrInstance.current) && typeof flatpickrInstance.current.destroy === 'function') {
+              flatpickrInstance.current.destroy();
+            }
+          } catch (e) {
+            console.warn('Error destroying flatpickr instance:', e);
+          }
+          flatpickrInstance.current = null;
+        }
+
+        // Initialize flatpickr with year and month navigation
+        flatpickrInstance.current = flatpickr(`#${id}`, {
+          mode: mode || "single",
+          static: true,
+          monthSelectorType: "static",
+          dateFormat: "Y-m-d",
+          defaultDate,
+          onChange: onChange || undefined,
+          // Enable year and month dropdowns for quick navigation
+          enableTime: false,
+          clickOpens: true,
+          // Allow quick year selection by clicking on year
+          onReady: function(selectedDates, dateStr, instance) {
+            try {
+              // Make year clickable to show year picker
+              const yearInput = instance.calendarContainer?.querySelector('.flatpickr-current-month .flatpickr-monthDropdown-months');
+              if (yearInput) {
+                yearInput.addEventListener('click', function() {
+                  instance.changeMonth(0);
+                });
+              }
+            } catch (e) {
+              console.warn('Error in flatpickr onReady:', e);
+            }
+          },
+        });
+      } catch (error) {
+        console.error('Error initializing flatpickr:', error);
+      }
     };
 
-    initFlatpickr();
+    if (mounted) {
+      initFlatpickr();
+    }
 
     return () => {
       if (flatpickrInstance.current) {
-        if (!Array.isArray(flatpickrInstance.current)) {
-          flatpickrInstance.current.destroy();
+        try {
+          if (!Array.isArray(flatpickrInstance.current) && typeof flatpickrInstance.current.destroy === 'function') {
+            flatpickrInstance.current.destroy();
+          }
+        } catch (e) {
+          console.warn('Error destroying flatpickr instance in cleanup:', e);
         }
         flatpickrInstance.current = null;
       }
     };
-  }, [mode, onChange, id, defaultDate]);
+  }, [mode, onChange, id, defaultDate, mounted]);
 
   return (
     <div>

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { title, description, type, options, order, active } = body;
+    const { title, description, type, options, textInputType, order, active } = body;
 
     if (!title || !type) {
       return NextResponse.json(
@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
       description,
       type,
       options: options || [],
+      textInputType: type === "text" ? textInputType : undefined,
       order: finalOrder,
       active: typeof active === "boolean" ? active : true,
     });

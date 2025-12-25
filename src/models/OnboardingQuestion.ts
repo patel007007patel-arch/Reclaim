@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-export type QuestionType = "single" | "multi" | "date" | "number" | "days" | "text";
+export type QuestionType = "single" | "multi" | "date" | "single-picker" | "text";
+export type TextInputType = "plain-text" | "number" | "price";
 
 export interface IOnboardingOption {
   _id?: string;
@@ -13,6 +14,7 @@ export interface IOnboardingQuestion extends Document {
   description?: string;
   type: QuestionType;
   options: IOnboardingOption[];
+  textInputType?: TextInputType; // For text type: plain-text, number, or price
   order: number;
   active: boolean;
 }
@@ -31,10 +33,14 @@ const OnboardingQuestionSchema = new Schema<IOnboardingQuestion>(
     description: { type: String },
     type: {
       type: String,
-      enum: ["single", "multi", "date", "number", "days", "text"],
+      enum: ["single", "multi", "date", "single-picker", "text"],
       required: true,
     },
     options: { type: [OptionSchema], default: [] },
+    textInputType: {
+      type: String,
+      enum: ["plain-text", "number", "price"],
+    },
     order: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
   },

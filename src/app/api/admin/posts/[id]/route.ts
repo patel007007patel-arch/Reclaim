@@ -24,7 +24,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const item = await Post.findByIdAndUpdate(id, body, {
       new: true,
-    });
+    })
+      .populate("user", "name email")
+      .populate("flags", "name email")
+      .lean();
+    
     if (!item) {
       return NextResponse.json(
         { success: false, message: "Post not found" },
@@ -32,7 +36,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       );
     }
 
-    return NextResponse.json({ success: true, item }, { status: 200 });
+    // Ensure flagCount is calculated
+    const itemWithFlagCount = {
+      ...item,
+      flagCount: (item as any).flagCount || ((item as any).flags?.length || 0),
+    };
+
+    return NextResponse.json({ success: true, item: itemWithFlagCount }, { status: 200 });
   } catch (error: any) {
     console.error("POST UPDATE ERROR:", error);
     return NextResponse.json(
