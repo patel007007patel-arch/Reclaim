@@ -6,7 +6,7 @@ import DatePicker from "@/components/form/date-picker";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
-type QuestionType = "single" | "multi" | "date" | "single-picker";
+type QuestionType = "single" | "multi" | "date" | "single-picker" | "text";
 type TextInputType = "plain-text" | "number" | "price";
 
 interface Option {
@@ -183,7 +183,7 @@ export default function OnboardingQuestionsPage() {
       description: q.description,
       type: q.type,
       options: q.options || [],
-      textInputType: q.textInputType || (q.type === "single-picker" ? "plain-text" : undefined),
+      textInputType: q.textInputType || (q.type === "text" ? "plain-text" : undefined),
       active: q.active,
     });
     setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
@@ -461,7 +461,10 @@ export default function OnboardingQuestionsPage() {
                   newOptions = [];
                 } else if (newType === "single-picker" && form.type !== "single-picker") {
                   newOptions = [];
-                  newTextInputType = "plain-text"; // Default for single-picker
+                  newTextInputType = undefined; // No textInputType for single-picker
+                } else if (newType === "text" && form.type !== "text") {
+                  newOptions = []; // No options for text type
+                  newTextInputType = "plain-text"; // Default for text type
                 }
                 setForm((f) => ({ ...f, type: newType, options: newOptions, textInputType: newTextInputType }));
               }}
@@ -470,6 +473,7 @@ export default function OnboardingQuestionsPage() {
               <option value="multi">Multi choice</option>
               <option value="date">Date</option>
               <option value="single-picker">Single Picker</option>
+              <option value="text">Text</option>
             </select>
           </div>
 
@@ -551,97 +555,79 @@ export default function OnboardingQuestionsPage() {
           {/* Single Picker Options Management */}
           {form.type === "single-picker" && (
             <div className="md:col-span-2 space-y-3">
-              {/* Text Input Type Selection for Single Picker */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                  Text Input Type 
-                </label>
-                <select
-                  className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  value={form.textInputType || "plain-text"}
-                  onChange={(e) => setForm((f) => ({ ...f, textInputType: e.target.value as TextInputType }))}
-                >
-                  <option value="plain-text">Plain Text</option>
-                  <option value="number">Number</option>
-                  <option value="price">Price</option>
-                </select>
-              </div>
-
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
                   Single Picker Options
                 </label>
                 
-                {/* Preview of how options will appear */}
-                {(form.options || []).length > 0 && (
-                  <div className="mb-3 mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
-                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      Preview (how users will see it):
+                <div className="space-y-2 mt-2">
+                  {/* Custom Options */}
+                  {(form.options || []).map((opt, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Label (e.g., Monday, Tuesday)"
+                        className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
+                        value={opt.label}
+                        onChange={(e) => {
+                          const newOptions = [...(form.options || [])];
+                          newOptions[idx] = { ...newOptions[idx], label: e.target.value };
+                          setForm((f) => ({ ...f, options: newOptions }));
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value (e.g., monday, tuesday)"
+                        className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
+                        value={opt.value}
+                        onChange={(e) => {
+                          const newOptions = [...(form.options || [])];
+                          newOptions[idx] = { ...newOptions[idx], value: e.target.value };
+                          setForm((f) => ({ ...f, options: newOptions }));
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newOptions = (form.options || []).filter((_, i) => i !== idx);
+                          setForm((f) => ({ ...f, options: newOptions }));
+                        }}
+                        className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
+                      >
+                        Remove
+                      </button>
                     </div>
-                    <select
-                      disabled
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
-                    >
-                      <option value="">Select an option...</option>
-                      {(form.options || []).map((opt, idx) => (
-                        <option key={idx} value={opt.value}>
-                          {opt.label || opt.value || `Option ${idx + 1}`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                {/* Custom Options */}
-                {(form.options || []).map((opt, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Label (e.g., Monday, Tuesday)"
-                      className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
-                      value={opt.label}
-                      onChange={(e) => {
-                        const newOptions = [...(form.options || [])];
-                        newOptions[idx] = { ...newOptions[idx], label: e.target.value };
-                        setForm((f) => ({ ...f, options: newOptions }));
-                      }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Value (e.g., monday, tuesday)"
-                      className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
-                      value={opt.value}
-                      onChange={(e) => {
-                        const newOptions = [...(form.options || [])];
-                        newOptions[idx] = { ...newOptions[idx], value: e.target.value };
-                        setForm((f) => ({ ...f, options: newOptions }));
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newOptions = (form.options || []).filter((_, i) => i !== idx);
-                        setForm((f) => ({ ...f, options: newOptions }));
-                      }}
-                      className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newOptions = [...(form.options || []), { label: "", value: "" }];
-                    setForm((f) => ({ ...f, options: newOptions }));
-                  }}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                >
-                  + Add Option
-                </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newOptions = [...(form.options || []), { label: "", value: "" }];
+                      setForm((f) => ({ ...f, options: newOptions }));
+                    }}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    + Add Option
+                  </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Text Type - Only Text Input Type Selection */}
+          {form.type === "text" && (
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+                Text Input Type
+              </label>
+              <select
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                value={form.textInputType || "plain-text"}
+                onChange={(e) => setForm((f) => ({ ...f, textInputType: e.target.value as TextInputType }))}
+              >
+                <option value="plain-text">Plain Text</option>
+                <option value="number">Number</option>
+                <option value="price">Price</option>
+              </select>
             </div>
           )}
 
@@ -787,6 +773,7 @@ export default function OnboardingQuestionsPage() {
                 <option value="multi">Multi Choice</option>
                 <option value="date">Date</option>
                 <option value="single-picker">Single Picker</option>
+                <option value="text">Text</option>
               </select>
             </div>
             <div className="flex items-end">
@@ -893,6 +880,11 @@ export default function OnboardingQuestionsPage() {
                     {(q.type === "single" || q.type === "multi" || q.type === "single-picker") && q.options && q.options.length > 0 && (
                       <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                         {q.options.length} option{q.options.length !== 1 ? "s" : ""}: {q.options.map(opt => opt.label || opt.value).join(", ")}
+                      </div>
+                    )}
+                    {q.type === "text" && q.textInputType && (
+                      <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                        Input Type: {q.textInputType}
                       </div>
                     )}
                   </td>
