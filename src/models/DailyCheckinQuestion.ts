@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-export type DailyQuestionType = "single" | "multi" | "scale" | "text";
+export type DailyQuestionType = "single" | "multi" | "single-picker" | "text";
+export type TextInputType = "plain-text" | "number" | "price";
 
 export interface IDailyOption {
   _id?: string;
@@ -13,6 +14,7 @@ export interface IDailyCheckinQuestion extends Document {
   description?: string;
   type: DailyQuestionType;
   options: IDailyOption[];
+  textInputType?: TextInputType; // For text type: plain-text, number, or price
   order: number;
   active: boolean;
 }
@@ -31,10 +33,14 @@ const DailyCheckinQuestionSchema = new Schema<IDailyCheckinQuestion>(
     description: { type: String },
     type: {
       type: String,
-      enum: ["single", "multi", "scale", "text"],
+      enum: ["single", "multi", "single-picker", "text"],
       required: true,
     },
     options: { type: [DailyOptionSchema], default: [] },
+    textInputType: {
+      type: String,
+      enum: ["plain-text", "number", "price"],
+    },
     order: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
   },

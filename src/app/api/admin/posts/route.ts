@@ -64,9 +64,6 @@ export async function GET(req: NextRequest) {
     const dbQuery = finalQuery;
 
     const total = await Post.countDocuments(dbQuery);
-    console.log("Posts query:", JSON.stringify(dbQuery, null, 2));
-    console.log("Total posts found:", total);
-    console.log("Pagination - page:", page, "limit:", limit, "skip:", skip);
     
     let queryBuilder = Post.find(dbQuery)
       .sort({ createdAt: -1 })
@@ -77,7 +74,6 @@ export async function GET(req: NextRequest) {
     queryBuilder = queryBuilder.skip(skip).limit(limit);
     
     const items = await queryBuilder.lean();
-    console.log("Posts returned:", items.length);
     
     // Calculate flagCount for each post if not already set
     const itemsWithFlagCount = items.map((item: any) => ({

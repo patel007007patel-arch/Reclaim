@@ -5,7 +5,8 @@ import Toast from "@/components/ui/toast/Toast";
 import StatusToggle from "@/components/ui/status-toggle/StatusToggle";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog/ConfirmationDialog";
 
-type QuestionType = "single" | "multi" | "scale" | "text";
+type QuestionType = "single" | "multi" | "single-picker" | "text";
+type TextInputType = "plain-text" | "number" | "price";
 
 interface Option {
   _id?: string;
@@ -19,6 +20,7 @@ interface Question {
   description?: string;
   type: QuestionType;
   options: Option[];
+  textInputType?: TextInputType;
   order: number;
   active: boolean;
 }
@@ -32,6 +34,7 @@ export default function DailyCheckinQuestionsPage() {
     description: "",
     type: "single",
     options: [],
+    textInputType: undefined,
     active: true,
   });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -97,6 +100,7 @@ export default function DailyCheckinQuestionsPage() {
       description: "",
       type: "single",
       options: [],
+      textInputType: undefined,
       active: true,
     });
     setEditingId(null);
@@ -174,6 +178,7 @@ export default function DailyCheckinQuestionsPage() {
       description: q.description,
       type: q.type,
       options: q.options || [],
+      textInputType: q.textInputType || (q.type === "text" ? "plain-text" : undefined),
       active: q.active,
     });
     setConfirmDialog({ isOpen: false, id: null, message: "", action: undefined, item: null, newStatus: undefined });
@@ -444,17 +449,25 @@ export default function DailyCheckinQuestionsPage() {
                 const newType = e.target.value as QuestionType;
                 // Reset options when changing type (except if switching between compatible types)
                 let newOptions = form.options || [];
-                if ((newType === "text") || 
-                    ((newType === "single" || newType === "multi") && form.type !== "single" && form.type !== "multi") ||
-                    (newType === "scale" && form.type !== "scale")) {
+                let newTextInputType = form.textInputType;
+                if (newType === "text" && form.type !== "text") {
                   newOptions = [];
+                  newTextInputType = "plain-text"; // Default for text type
+                } else if ((newType === "single" || newType === "multi") && form.type !== "single" && form.type !== "multi") {
+                  newOptions = [];
+                  newTextInputType = undefined;
+                } else if (newType === "single-picker" && form.type !== "single-picker") {
+                  newOptions = [];
+                  newTextInputType = undefined; // No textInputType for single-picker
+                } else if (newType !== "text") {
+                  newTextInputType = undefined;
                 }
-                setForm((f) => ({ ...f, type: newType, options: newOptions }));
+                setForm((f) => ({ ...f, type: newType, options: newOptions, textInputType: newTextInputType }));
               }}
             >
               <option value="single">Single choice</option>
               <option value="multi">Multi choice</option>
-              <option value="scale">Scale</option>
+              <option value="single-picker">Single Picker</option>
               <option value="text">Text</option>
             </select>
           </div>
@@ -534,121 +547,52 @@ export default function DailyCheckinQuestionsPage() {
             </div>
           )}
 
-          {/* Scale Options Management */}
-          {form.type === "scale" && (
-            <div className="md:col-span-2 space-y-2">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                Scale Options
-              </label>
-              <div className="space-y-2">
-                {/* Preset Scale Options */}
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: "1-5", value: "1-5", min: "1", max: "5" },
-                    { label: "1-10", value: "1-10", min: "1", max: "10" },
-                    { label: "0-10", value: "0-10", min: "0", max: "10" },
-                    { label: "1-7", value: "1-7", min: "1", max: "7" },
-                  ].map((preset) => {
-                    const exists = (form.options || []).some((opt) => opt.value === preset.value);
-                    return (
+          {/* Single Picker Options Management */}
+          {form.type === "single-picker" && (
+            <div className="md:col-span-2 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Single Picker Options
+                </label>
+                
+                <div className="space-y-2 mt-2">
+                  {/* Custom Options */}
+                  {(form.options || []).map((opt, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Label (e.g., Monday, Tuesday)"
+                        className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
+                        value={opt.label}
+                        onChange={(e) => {
+                          const newOptions = [...(form.options || [])];
+                          newOptions[idx] = { ...newOptions[idx], label: e.target.value };
+                          setForm((f) => ({ ...f, options: newOptions }));
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value (e.g., monday, tuesday)"
+                        className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
+                        value={opt.value}
+                        onChange={(e) => {
+                          const newOptions = [...(form.options || [])];
+                          newOptions[idx] = { ...newOptions[idx], value: e.target.value };
+                          setForm((f) => ({ ...f, options: newOptions }));
+                        }}
+                      />
                       <button
-                        key={preset.value}
                         type="button"
                         onClick={() => {
-                          if (exists) {
-                            const newOptions = (form.options || []).filter(
-                              (opt) => opt.value !== preset.value
-                            );
-                            setForm((f) => ({ ...f, options: newOptions }));
-                          } else {
-                            // Remove other scale options first (only one scale at a time)
-                            const newOptions = (form.options || []).filter(
-                              (opt) => !["1-5", "1-10", "0-10", "1-7"].includes(opt.value)
-                            );
-                            newOptions.push(preset);
-                            setForm((f) => ({ ...f, options: newOptions }));
-                          }
+                          const newOptions = (form.options || []).filter((_, i) => i !== idx);
+                          setForm((f) => ({ ...f, options: newOptions }));
                         }}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          exists
-                            ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
-                            : "border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                        }`}
+                        className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
                       >
-                        {preset.label}
+                        Remove
                       </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom Scale Options */}
-                <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                    Custom Scale:
-                  </div>
-                  {(form.options || [])
-                    .filter((opt) => !["1-5", "1-10", "0-10", "1-7"].includes(opt.value))
-                    .map((opt, idx) => {
-                      const actualIdx = (form.options || []).findIndex((o) => o === opt);
-                      const scaleMatch = opt.value.match(/^(\d+)-(\d+)$/);
-                      const minValue = scaleMatch ? scaleMatch[1] : "";
-                      const maxValue = scaleMatch ? scaleMatch[2] : "";
-                      return (
-                        <div key={actualIdx} className="flex gap-2">
-                          <input
-                            type="number"
-                            placeholder="Min (e.g., 1)"
-                            min="0"
-                            className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
-                            value={minValue}
-                            onChange={(e) => {
-                              const min = e.target.value;
-                              const max = maxValue || min;
-                              const newOptions = [...(form.options || [])];
-                              newOptions[actualIdx] = {
-                                ...newOptions[actualIdx],
-                                value: min && max ? `${min}-${max}` : "",
-                                label: min && max ? `${min}-${max}` : "",
-                              };
-                              setForm((f) => ({ ...f, options: newOptions }));
-                            }}
-                          />
-                          <span className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            to
-                          </span>
-                          <input
-                            type="number"
-                            placeholder="Max (e.g., 10)"
-                            min="1"
-                            className="flex-1 rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white"
-                            value={maxValue}
-                            onChange={(e) => {
-                              const max = e.target.value;
-                              const min = minValue || "1";
-                              const newOptions = [...(form.options || [])];
-                              newOptions[actualIdx] = {
-                                ...newOptions[actualIdx],
-                                value: min && max ? `${min}-${max}` : "",
-                                label: min && max ? `${min}-${max}` : "",
-                              };
-                              setForm((f) => ({ ...f, options: newOptions }));
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newOptions = (form.options || []).filter(
-                                (_, i) => i !== actualIdx
-                              );
-                              setForm((f) => ({ ...f, options: newOptions }));
-                            }}
-                            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800/70 dark:text-red-300 dark:hover:bg-red-900/40"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      );
-                    })}
+                    </div>
+                  ))}
                   <button
                     type="button"
                     onClick={() => {
@@ -657,10 +601,28 @@ export default function DailyCheckinQuestionsPage() {
                     }}
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   >
-                    + Add Custom Scale
+                    + Add Option
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Text Type - Only Text Input Type Selection */}
+          {form.type === "text" && (
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+                Text Input Type
+              </label>
+              <select
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                value={form.textInputType || "plain-text"}
+                onChange={(e) => setForm((f) => ({ ...f, textInputType: e.target.value as TextInputType }))}
+              >
+                <option value="plain-text">Plain Text</option>
+                <option value="number">Number</option>
+                <option value="price">Price</option>
+              </select>
             </div>
           )}
 
@@ -747,7 +709,7 @@ export default function DailyCheckinQuestionsPage() {
                 <option value="">All Types</option>
                 <option value="single">Single Choice</option>
                 <option value="multi">Multi Choice</option>
-                <option value="scale">Scale</option>
+                <option value="single-picker">Single Picker</option>
                 <option value="text">Text</option>
               </select>
             </div>
@@ -852,6 +814,11 @@ export default function DailyCheckinQuestionsPage() {
                   </td>
                   <td className="px-4 py-3 text-xs capitalize text-gray-600 dark:text-gray-300">
                     {q.type}
+                    {q.type === "text" && q.textInputType && (
+                      <span className="ml-2 text-gray-400 dark:text-gray-500">
+                        ({q.textInputType})
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
