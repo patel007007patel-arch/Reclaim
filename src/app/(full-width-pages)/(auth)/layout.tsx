@@ -25,8 +25,11 @@ export default function AuthLayout({
                   <Image
                     width={231}
                     height={48}
-                    src="./images/logo/auth-logo.svg"
-                    alt="Logo"
+                    src="/images/logo/ReclaimLogo.png"
+                    alt="Reclaim Logo"
+                    className="object-contain"
+                    unoptimized
+                    priority
                   />
                 </Link>
                 <p className="text-center text-gray-400 dark:text-white/60">

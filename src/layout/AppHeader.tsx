@@ -5,12 +5,29 @@ import UserDropdown from "@/components/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const [adminName, setAdminName] = useState<string>("Admin");
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+
+  useEffect(() => {
+    // Fetch admin name for header display
+    const fetchAdmin = async () => {
+      try {
+        const res = await fetch("/api/admin/me");
+        const data = await res.json();
+        if (data.success && data.admin) {
+          setAdminName(data.admin.name || data.admin.email?.split("@")[0] || "Admin");
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin", error);
+      }
+    };
+    fetchAdmin();
+  }, []);
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -67,21 +84,18 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
+          <Link href="/" className="lg:hidden flex items-center gap-2">
             <Image
-              width={154}
+              width={32}
               height={32}
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
+              src="/images/logo/ReclaimLogo.png"
+              alt="Reclaim Logo"
+              className="object-contain"
+              unoptimized
+              priority
             />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
-              alt="Logo"
-            />
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">Reclaim</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">• {adminName}</span>
           </Link>
 
           <button
@@ -109,6 +123,21 @@ const AppHeader: React.FC = () => {
             isApplicationMenuOpen ? "flex" : "hidden"
           } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
         >
+          {/* Desktop: Logo + Reclaim + Admin Name */}
+          <Link href="/" className="hidden lg:flex items-center gap-3 mr-auto">
+            <Image
+              width={40}
+              height={40}
+              src="/images/logo/ReclaimLogo.png"
+              alt="Reclaim Logo"
+              className="object-contain"
+              unoptimized
+              priority
+            />
+            <span className="text-xl font-semibold text-gray-900 dark:text-white">Reclaim</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">• {adminName}</span>
+          </Link>
+
           <div className="flex items-center gap-2 2xsm:gap-3">
             {/* <!-- Dark Mode Toggler --> */}
             <ThemeToggleButton />

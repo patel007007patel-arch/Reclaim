@@ -394,37 +394,35 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${
+        className={`py-8 flex items-center gap-3 ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link href="/">
+        <Link href="/" className="flex items-center gap-3">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              {/* <Image
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              /> */}
-              {/* <Image
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              /> */}
-              <h1 style={{color: "white", fontSize: "24px", fontWeight: "bold", fontFamily: "Arial, sans-serif"}}>
-              Reclaim
-              </h1>
+              <Image
+                src="/images/logo/ReclaimLogo.png"
+                alt="Reclaim Logo"
+                width={30}
+                height={20}
+                className="object-contain"
+                unoptimized
+                priority
+              />
+              <span className="text-xl font-semibold text-gray-900 dark:text-white">
+                Reclaim
+              </span>
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
+              src="/images/logo/ReclaimLogo.png"
+              alt="Reclaim Logo"
+              width={40}
+              height={40}
+              className="object-contain"
+              unoptimized
+              priority
             />
           )}
         </Link>
